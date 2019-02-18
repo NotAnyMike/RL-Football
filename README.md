@@ -15,3 +15,20 @@ is small enought, in order solve a toy example,
 The optimal policy and optimal values are
 
 ![sol](Exercise1/img/exc1.png)
+
+## Exercise 2: Different TD algorithms
+
+### Q-learning algorithms
+
+The implemented version is very first working version, therefore not the most optimal, its performance is
+
+| metric | value |
+| --- | --- |
+| TotalFrames | 158954 |
+| Avg Framse Per Trial | 317.9 |
+| Avg Frames per Goal  | 435.9 |
+| Trials | 500 |
+| Goals  | 80  |
+| Defense Captured | 0 |
+| Balls out of Bounds | 420 |
+| Out of time | 0 |
