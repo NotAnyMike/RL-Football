@@ -3,6 +3,7 @@
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
+import argparse
 
 class MonteCarloAgent(Agent):
 	def __init__(self, discountFactor, epsilon, initVals=0.0):
@@ -29,8 +30,19 @@ class MonteCarloAgent(Agent):
 	def setEpsilon(self, epsilon):
 		raise NotImplementedError
 
+	def computeHyperparameters(self, numTakenActions, episodeNumber):
+		raise NotImplementedError
+
 
 if __name__ == '__main__':
+
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--id', type=int, default=0)
+	parser.add_argument('--numOpponents', type=int, default=0)
+	parser.add_argument('--numTeammates', type=int, default=0)
+	parser.add_argument('--numEpisodes', type=int, default=500)
+
+	args=parser.parse_args()
 
 	#Init Connections to HFO Server
 	hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
@@ -38,7 +50,7 @@ if __name__ == '__main__':
 
 	# Initialize a Monte-Carlo Agent
 	agent = MonteCarloAgent(discountFactor = 0.99, epsilon = 1.0)
-	numEpisodes = 10
+	numEpisodes = args.numEpisodes
 	numTakenActions = 0
 	# Run training Monte Carlo Method
 	for episode in range(numEpisodes):	
@@ -47,7 +59,7 @@ if __name__ == '__main__':
 		status = 0
 
 		while status==0:
-			epsilon = agent.computeHyperparameters(self, numTakenActions, episode)
+			epsilon = agent.computeHyperparameters(numTakenActions, episode)
 			agent.setEpsilon(epsilon)
 			obsCopy = observation.copy()
 			agent.setState(agent.toStateRepresentation(obsCopy))
