@@ -7,3 +7,5 @@ __pycache__/
 
 Exercise2/SARSAAgent.sh
 Exercise2/SARSABase.py
+Exercise2/MonteCarlo.sh
+Exercise2/MonteCarloBase.py
