@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # encoding utf-8
 
+import numpy as np
+
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
 import argparse
 
 class SARSAAgent(Agent): 
-        def __init__(self, learningRate, discountFactor, epsilon, initVals=0.0):
+        def __init__(self, learningRate, discountFactor, epsilon=1, initVals=0.0):
                 super(SARSAAgent, self).__init__()
 
                 self._lr = learningRate
@@ -16,20 +18,22 @@ class SARSAAgent(Agent):
 
                 self._Q = {}
 
-        def Q(state, action):
+        def Q(self, state, action):
             if tuple([state,action]) not in self._Q.keys():
-                self._q[tuple([state,action])] = 0.0
-            return self._q[tuple([state,action])]
+                self._Q[tuple([state,action])] = 0.0
+
+            return self._Q[tuple([state,action])]
 
         def learn(self):
                 q  = self.Q(self._s1, self._a)
                 a2 = self._best_act(self._s2)
                 q2 = self.Q(self._s2, a2)
-                delta = self._lr (self._r + self._gamma * q2 - q)
+                print(self._lr, self._r)
+                delta = self._lr * (self._r + self._gamma * q2 - q)
                 self._Q[tuple([self._s1, self._a])] = q + delta
                 return delta
 
-        def best_act(state):
+        def _best_act(self, state):
                 max_val = None # To allow negative values
                 opt_act = []
                 for a in self.possibleActions:
@@ -49,7 +53,7 @@ class SARSAAgent(Agent):
                 p = self._epsilon #+ (self._epsilon/len(self.possibleActions))
                 case = np.random.binomial(1, p, 1)
                 if case: # Choose greedy action
-                        a = self.best_act(self._s1)
+                        a = self._best_act(self._s1)
                 else: # Choose randomly
                         a = np.random.choice(self.possibleActions)
                 return a
@@ -62,7 +66,6 @@ class SARSAAgent(Agent):
                 self._a  = action
                 self._r  = reward
                 self._d  = status
-                print("status: ", status)
                 self._s2 = nextState
 
         def computeHyperparameters(self, numTakenActions, episodeNumber):
@@ -100,7 +103,7 @@ if __name__ == '__main__':
         hfoEnv.connectToServer()
 
         # Initialize a SARSA Agent
-        agent = SARSAAgent(0.1, 0.99)
+        agent = SARSAAgent(0.1, 0.99, 1)
 
         # Run training using SARSA
         numTakenActions = 0 
@@ -133,6 +136,7 @@ if __name__ == '__main__':
                         
                         observation = nextObservation
 
+                print("return none")
                 agent.setExperience(agent.toStateRepresentation(nextObservation), None, None, None, None)
                 agent.learn()
 
