@@ -9,32 +9,75 @@ class SARSAAgent(Agent):
 	def __init__(self, learningRate, discountFactor, epsilon, initVals=0.0):
 		super(SARSAAgent, self).__init__()
 
+                self._lr = learningRate
+                self._gamma = discountFactor
+                self._epsilon = epsilon
+                self._initVals = initVals
+
+                self._Q = {}
+
+        def Q(state, action):
+            if tuple([state,action]) not in self._Q.keys():
+                self._q[tuple([state,action])] = 0.0
+            return self._q[tuple([state,action])]
+
 	def learn(self):
 		raise NotImplementedError
+                q  = self.Q(self._s1, self._a)
+                a2 = self._best_act(self._s2)
+                q2 = self.Q(self._s2, self
+                delta = self._lr (self._r + self._gamma * q2 - q)
+
+        def best_act(state):
+                max_val = None # To allow negative values
+                opt_act = []
+                for a in self.possibleActions:
+                    q = self.Q(state, a)
+                    if max_val == None or q > max_val:
+                        opt_act = [a]
+                        max_val = q
+                    elif q == max_val:
+                        opt_act.append(a) 
+                a = np.random.choice(opt_act)
+                return a
 
 	def act(self):
-		raise NotImplementedError
+                '''
+                Choose the best action and return it
+                '''
+                p = self._epsilon #+ (self._epsilon/len(self.possibleActions))
+                case = np.random.binomial(1, p, 1)
+                if case: # Choose greedy action
+                        a = self.best_act(self._s1)
+                else: # Choose randomly
+                        a = np.random.choice(self.possibleActions)
+                return a
 
 	def setState(self, state):
-		raise NotImplementedError
+                self._s1 = state
 
 	def setExperience(self, state, action, reward, status, nextState):
-		raise NotImplementedError
+                self._s1 = state
+                self._a  = action
+                self._r  = reward
+                self._d  = status
+                print("status: ", status)
+                self._s2 = nextState
 
 	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		raise NotImplementedError
+		return self._lr, self._epsilon # TODO
 
 	def toStateRepresentation(self, state):
-		raise NotImplementedError
+                return tuple(state)
 
 	def reset(self):
 		raise NotImplementedError
 
 	def setLearningRate(self, learningRate):
-		raise NotImplementedError
+                self._lr = learningRate
 
 	def setEpsilon(self, epsilon):
-		raise NotImplementedError
+                self._epsilon = epsilon
 
 if __name__ == '__main__':
 

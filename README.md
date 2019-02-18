@@ -20,15 +20,15 @@ The optimal policy and optimal values are
 
 ### Q-learning algorithms
 
-The implemented version is very first working version, therefore not the most optimal, its performance is
+The implemented version is the very first working version, therefore not the most optimal, its performance is
 
 | metric | value |
 | --- | --- |
-| TotalFrames | 158954 |
-| Avg Framse Per Trial | 317.9 |
-| Avg Frames per Goal  | 435.9 |
+| TotalFrames | 114160 |
+| Avg Frames Per Trial | 228.3 |
+| Avg Frames per Goal  | 270.4 |
 | Trials | 500 |
-| Goals  | 80  |
+| Goals  | 47  |
 | Defense Captured | 0 |
-| Balls out of Bounds | 420 |
+| Balls out of Bounds | 454 |
 | Out of time | 0 |
