@@ -32,3 +32,22 @@ The implemented version is the very first working version, therefore not the mos
 | Defense Captured | 0 |
 | Balls out of Bounds | 454 |
 | Out of time | 0 |
+
+### SARSA methods
+
+There is some thing that I dont know understand, mainly why do they call an `agent.setExperience` with none values at the end, and what is the main difference with Ql
+
+### MonteCarlo Control with epsilon soft policies
+
+The implemented version is the very first working version, therefore not the most optimal, its performance is
+
+| metric | value |
+| --- | --- |
+| TotalFrames | 156006 |
+| Avg Frames Per Trial | 312.0 |
+| Avg Frames per Goal  | 394.8 |
+| Trials | 500 |
+| Goals  | 49  |
+| Defense Captured | 1 |
+| Balls out of Bounds | 450 |
+| Out of time | 0 |
