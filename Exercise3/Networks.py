@@ -9,10 +9,13 @@ import math
 # and define the computations for the forward pass in the forward method.
 
 class ValueNetwork(nn.Module):
-        def __init__(self):
+        def __init__(self, features_level="high"):
                 super(ValueNetwork, self).__init__()
                 hidden_sizes = [50, 1]
-                input_dim = 68+1
+                if features_level == "high":
+                        input_dim = 15+1
+                else:
+                        input_dim = 68+1
                 self.layers = []
                 self.layers = nn.ModuleList()
 

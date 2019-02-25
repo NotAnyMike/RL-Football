@@ -53,7 +53,7 @@ class HFOEnv(object):
         def connectToServer(self):
                 os.system("./Goalkeeper.py --numEpisodes=8000 --port={} &".format(str(self.port)))
                 time.sleep(2)
-                self.hfo.connectToServer(LOW_LEVEL_FEATURE_SET,self.config_dir,self.port,self.server_addr,self.team_name,self.play_goalie)
+                self.hfo.connectToServer(HIGH_LEVEL_FEATURE_SET,self.config_dir,self.port,self.server_addr,self.team_name,self.play_goalie)
 
         # This method computes the resulting status and states after an agent decides to take an action
         def act(self, actionString):
@@ -87,15 +87,15 @@ class HFOEnv(object):
 
                 if status == 1:
                     print("#############################################")
-                    print("#############################################")
-                    print("#############################################")
                     print("################### GOAL ####################")
-                    print("#############################################")
-                    print("#############################################")
                     print("#############################################")
 
                 if status == 1:
                         reward += 1.0
+                elif status == 0:
+                        reward -= 0.1
+                elif status > 1:
+                        reward -= 1.0
 
                 return reward, info
 
@@ -117,12 +117,4 @@ class HFOEnv(object):
         # Preprocess the state representation in this function
         def preprocessState(self, state):
                 return state
-
-
-
-
-
-
-
-
 

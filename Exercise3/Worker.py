@@ -1,10 +1,12 @@
 from pdb import set_trace
+from time import time
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
+from tensorboard_logger import configure, log_value
 
 from Networks import ValueNetwork
 from torch.autograd import Variable
@@ -16,13 +18,19 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
         hfoEnv = HFOEnv(numTeammates=0, numOpponents=1, port=port, seed=seed)
         hfoEnv.connectToServer()
 
+        print(hfoEnv.hfo.getStateSize())
+
         episodeNumber = 0
+        episodeReward = 0
+        episodeSteps  = 0
         gamma = 0.99
         epsilon = 0.8
         t = 0
         loss_func = nn.MSELoss()
         state1 = hfoEnv.reset()
-        for epoch in range(1, args.epochs + 1):
+        configure("tb/" + str(time()), flush_secs=5)
+        #for epoch in range(1, args.epochs + 1):
+        while episodeNumber < args.episodes:
                 #train_epoch(epoch, args, model, device, train_loader, optimizer)
                 if np.random.random() >= epsilon:
                     action = random.randint(0,3)
@@ -34,10 +42,16 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 a1_num = hfoEnv.possibleActions.index(a1)
 
                 state2, reward, done, status, info = hfoEnv.step(a1)
+                episodeReward += reward
+                
                 #print(state2, reward, done, status, info)
 
                 if done:
+                        log_value('episode reward learning (idx %i)' % idx, episodeReward, episodeNumber)
                         episodeNumber += 1
+                        episodeReward = 0.0
+                        episodeSteps  = 0
+                        hfoEnv.reset()
 
                 y = computeTargets(reward, state2, gamma, done, target_value_network)
 
@@ -47,6 +61,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
 
                 state1 = state2
                 t += 1
+                episodeSteps += 1
                 with lock:
                         counter.value += counter.value + 1
 
@@ -71,8 +86,8 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         target_value_network.zero_grad()
                         target_value_network.load_state_dict(value_network.state_dict())
 
-        #torch.manual_seed(args.seed + rank)
-        #optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+        # Finishing training and showing stats
+        hfoEnv.quitGame()
 
 def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork):
         if done:
@@ -81,7 +96,6 @@ def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork)
                 qs = [computePrediction(nextObservation,a,targetNetwork) for a in range(4)]
                 q_max = np.max(qs)
                 y = reward + discountFactor*q_max
-
         return y
 
 def computePrediction(state, action, valueNetwork, possible_actions=None):
