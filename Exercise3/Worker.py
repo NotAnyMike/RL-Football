@@ -32,11 +32,14 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
         #for epoch in range(1, args.epochs + 1):
         while episodeNumber < args.episodes:
                 #train_epoch(epoch, args, model, device, train_loader, optimizer)
-                if np.random.random() >= epsilon:
-                    action = random.randint(0,3)
+                
+                if args.eval or np.random.random() < epsilon:
+                        qs = [computePrediction(state1,a,value_network) for a in range(4)]
+                        action = np.argmax(qs)
+                        print("runing greedy") 
                 else:
-                    qs = [computePrediction(state1,a,value_network) for a in range(4)]
-                    action = np.argmax(qs)
+                        action = random.randint(0,3)
+                        print("runing random") 
 
                 a1 = hfoEnv.possibleActions[action]
                 a1_num = hfoEnv.possibleActions.index(a1)
@@ -47,7 +50,8 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 #print(state2, reward, done, status, info)
 
                 if done:
-                        log_value('episode reward learning (idx %i)' % idx, episodeReward, episodeNumber)
+                        learning_str = "eval" if args.eval else "learning"
+                        log_value('episode reward %s (idx %i)' % (learning_str,idx), episodeReward, episodeNumber)
                         episodeNumber += 1
                         episodeReward = 0.0
                         episodeSteps  = 0
@@ -65,26 +69,27 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 with lock:
                         counter.value += counter.value + 1
 
-                if t % I_async == 0 or done:
-                        # Async update of value_network using gradients
+                if args.eval == False:
+                        if t % I_async == 0 or done:
+                                # Async update of value_network using gradients
 
-                        with lock:
-                                # Add grads to value_network
-                                for param, shared_param in zip(
-                                            value_network.parameters(), 
-                                            target_value_network.parameters()):
-                                        shared_param._grad = param.grad
-                                        #value_network._grad = target_value_network.grad
-                                # Take a step
-                                optimizer.step()
-                                # Clean gradients
-                                optimizer.zero_grad()
-                        target_value_network.zero_grad()
+                                with lock:
+                                        # Add grads to value_network
+                                        for param, shared_param in zip(
+                                                    value_network.parameters(), 
+                                                    target_value_network.parameters()):
+                                                shared_param._grad = param.grad
+                                                #value_network._grad = target_value_network.grad
+                                        # Take a step
+                                        optimizer.step()
+                                        # Clean gradients
+                                        optimizer.zero_grad()
+                                target_value_network.zero_grad()
 
-                if counter.value % I_tar == 0:
-                        # Update target network
-                        target_value_network.zero_grad()
-                        target_value_network.load_state_dict(value_network.state_dict())
+                        if counter.value % I_tar == 0:
+                                # Update target network
+                                target_value_network.zero_grad()
+                                target_value_network.load_state_dict(value_network.state_dict())
 
         # Finishing training and showing stats
         hfoEnv.quitGame()

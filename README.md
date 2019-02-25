@@ -51,3 +51,23 @@ The implemented version is the very first working version, therefore not the mos
 | Defense Captured | 1 |
 | Balls out of Bounds | 450 |
 | Out of time | 0 |
+
+## Exercise 3
+
+### To-Do
+
+* Run without using the greedy policy and compare trained and not-trained models
+* Save the network
+
+The implemented version is the very first working version, therefore not the most optimal, its performance is
+
+| metric | value |
+| --- | --- |
+| TotalFrames | xxx |
+| Avg Frames Per Trial | xxx |
+| Avg Frames per Goal  | xxx |
+| Trials | xxx |
+| Goals  | xxx |
+| Defense Captured | xxx |
+| Balls out of Bounds | xxx |
+| Out of time | xxx |
