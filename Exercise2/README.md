@@ -1,16 +1,16 @@
 # Exercise 2 - Q-Learning, SARSA, and first-visit MC control with soft policies
 
-In this exercise, you are required to implement an attacking agent in the discretized Half Field Offense (HFO) domain. These agents will be controlled using the Q-Learning (**Section 6.5 of the book**), SARSA (**Section 6.4 of the book**), and first visit Monte Carlo control for soft policies (**Algorithm in page 101 of the book**). 
+In this exercise, your task is to implement an attacking agent in the discretized Half Field Offense (HFO) domain. Your agent will be controlled using Q-Learning (**Section 6.5 of the book**), SARSA (**Section 6.4 of the book**), and first visit Monte Carlo control with soft policies (**Algorithm in page 101 of the book**). 
 
-Just like in Exercise 1, the environment is a gridworld where each position is associated with a probability of scoring goals. Additionally, defending NPCs are positioned in parts of the environment and acts as obstacles. Episodes always end when agents execute the **KICK** action. If an agent manages to score a goal in an episode, the agent receives a reward of **+1**. Agents will also be punished with a penalty if it moves into a grid occupied by a defensive NPC. The position of defense NPCs will not change during the course of each episode. 
+Just like in Exercise 1, the environment is a gridworld where each position is associated with a probability of scoring a goal. Additionally, defending players are positioned in parts of the environment and act as obstacles. Episodes always end when the agent selects the **KICK** action. If an agent manages to score a goal in an episode, the agent receives a reward of **+1**. The agent will be punished with a penalty if it moves into a grid location occupied by a defending player. The position of defending players will not change during the course of each episode. 
 
 Full codes for the discretized HFO domain can be found in the `DiscreteHFO` folder. In particular, `DiscreteHFO/HFOAttackingPlayer.py` contains the implementation of the interface between the HFO domain and your agent controller. 
 
 ## Setup and Requirements
 
-A lot of students have noted that they ran into installation problems in DICE. Alternatively, you can also install HFO in the mlp cluster. However, if trouble persists, we encourage students to contact the demonstrators directly or visit the demonstration sessions that are going to be held in the following weeks. We do not provide any guarantee that this will work on your personal computers, but we guarantee that it will work in either DICE or the MLP clusters and will help troubleshoot any problems encountered for installing in DICE or the mlp clusters.
+A lot of students have noted that they ran into installation problems on DICE. As an alternative to DICE, you can also install HFO on the MLP cluster. However, if trouble persists, we encourage students to contact the demonstrators directly or visit the demonstration sessions that are going to be held in the following weeks. We do not provide any guarantee that this will work on your personal computers, but we guarantee that it will work in either DICE or the MLP clusters and will help troubleshoot any problems encountered for installing in DICE or the MLP clusters.
 
-To access DICE or the mlp servers from your personal computers, use the following commands for DICE:
+To access DICE or the MLP servers from your personal computers, use the following commands for DICE:
 ```
 ssh -X <UUN>@student.ssh.inf.ed.ac.uk
 ssh -X student.compute
@@ -48,11 +48,11 @@ git clone https://github.com/raharrasy/RL2019-BaseCodes.git
 ## Working on Task 2
 
 ### Minimum working example
-A minimum working example of how agents interact with the environment is provided in `RandomAgentExample/DiscretizedRandomAttackingController.py`
+A minimum working example of how the agent interacts with the environment is provided in `RandomAgentExample/DiscretizedRandomAttackingController.py`
 
-To start this task, you must first understand how to connect your agents to the HFO server. In the working example, this is provided in line 19-20. At the beginning of each episode, the agent will then need to get an initial state from the environment. An example on how to do this is provided in line 26.
+To start this task, you must first understand how to connect your agent to the HFO server. In the working example, this is provided in line 19-20. At the beginning of each episode, the agent will then need to get an initial state from the environment. An example on how to do this is provided in line 26.
 
-You then need to implement algorithms that choose actions to take given a certain state. Then, pass your action of choice through the provided `step` function in line 30. As a response, the environment will respond by providing your agent with the next state, reward, and episode completion information. 
+You then need to implement algorithms that choose actions to take given a certain state. Then, pass the selected action through the provided `step` function in line 30. As a response, the environment will respond by providing your agent with the next state, reward, and episode completion information. 
 
 To run your implementation and display the environment through the visualizer, do the following steps:
 
@@ -70,9 +70,9 @@ cd ..
 ## Marking
 Marking will be based on the correctness of your implementations and the performance of your agents. 
 
-To examine the correctness of the implementations, we will require you to implement functions that output specific values related to the algorithm being implemented. To find these functions and what they are supposed to output, refer to the README files inside each specific algorithm that you are supposed to implement. Additionally, we've also provided a small section of code in the **main** functions in each python files to provide information on how the functions are supposed to interact. You **must implement your agents such that these sequence of commands in the main function can train your agents**.
+To examine the correctness of the implementations, we will require you to implement functions that output specific values related to the algorithm being implemented. To find these functions and what they are supposed to output, refer to the README files inside each specific algorithm that you are supposed to implement. Additionally, we've also provided a small section of code in the **main** functions in each python files to provide information on how the functions are supposed to interact. You **must implement your agents such that the sequence of commands in the main function can train your agents**.
 
-On the **performance marking**, we will do several experiments under the same MDP where we **run the agents for 5000 episodes** using commands that are similar with which have been provided in the **main functions**. In each experiment we will store the performance of your agents in episodes that are divisible by 500 and average this value across experiments. We will then make a plot of the agent performance and compare it with our solutions. In 5000 episodes, given good hyperparameter settings, your agents should be able to reach performance that is close to optimal.
+On the **performance marking**, we will do several experiments under the same MDP where we **run the agents for 5000 episodes** using commands that are similar to what has been provided in the **main functions**. In each experiment we will store the performance of your agents in episodes that are divisible by 500 and average this value across experiments. We will then make a plot of the agent performance and compare it with our solutions. In 5000 episodes, given good hyperparameter settings, your agents should be able to reach performance that is close to optimal.
 
 ## Additional Information
 
@@ -85,9 +85,9 @@ On the **performance marking**, we will do several experiments under the same MD
 1. `DiscreteHFO/HFOAttackingPlayer.py`
    - File to establish connections with HFO and preprocess state representations gathered from the HFO domain.
 2. `DiscreteHFO/HFODefendingPlayer.py`
-   - File to control defending NPCs inside the HFO environment. 
+   - File to control defending player inside the HFO environment. 
 3. `DiscreteHFO/HFOGoalkeepingPlayer.py`
-   - File to control Goalkeeping NPCs inside the HFO environment. HFO environment cannot run without a goalkeeper. 
+   - File to control Goalkeeper inside the HFO environment. HFO environment cannot run without a goalkeeper. 
 4. `DiscreteHFO/DiscretizedDefendingPlayer.py`
    - File to initialize the defending player.
 5. `DiscreteHFO/Goalkeeper.py`
@@ -104,19 +104,19 @@ On the **performance marking**, we will do several experiments under the same MD
 ## Environment Details
    
 ### State Space
-The environment is modelled as a 6x5 grid. The grid with `(0,0)` coordinate is located in the top left part of the field. At each timestep, agents will be given a state representation, in form of a list, which has information on the defensive NPCs and their own location on the grid. The first item in the list is the agent's location and the rest are the location of the opponents. 
+The environment is modelled as a 6x5 grid. The grid cell with `(0,0)` coordinate is located in the top left part of the field. At each timestep, the agent will be given a state representation, in the form of a list, which has information on the defending players' location and the agent's own location on the grid. The first item in the list is the agent's location and the rest are the location of the defending players. 
 
-Also, the location of the goal is not modelled inside the grid. Therefore, agents cannot dribble into the goal and must rely on the `KICK` action to score goals. 
+The location of the goal is not modelled inside the grid. Therefore, agents cannot dribble into the goal and must rely on the `KICK` action to score goals. 
 
 ### Action Spaces
-Agents are equipped with a set of discrete actions. To move to adjacent grids, agents can use the `DRIBBLE_UP`,`DRIBBLE_DOWN`,`DRIBBLE_LEFT`, and `DRIBBLE_RIGHT` actions. Additionally, the `KICK` action enables the agents to shoot the ball into the goal. 
+Agents are equipped with a set of discrete actions. To move to adjacent grids, agents can use the `DRIBBLE_UP`,`DRIBBLE_DOWN`,`DRIBBLE_LEFT`, and `DRIBBLE_RIGHT` actions. Additionally, the `KICK` action enables the agents to shoot the ball toward the goal. 
 
 ### Reward Functions
-Agents only receive non-zero rewards at the completion of each episodes. In this case, a goal will result in a reward of **+1**. However, occupying the same grid as opponent agents will result in a penalty.
+Agents only receive non-zero rewards at the completion of each episode. In this case, a goal will result in a reward of **+1**. However, occupying the same grid as defending players will result in a penalty.
 
 ### Environment Dynamics
-Environment transition resulting from the actions are stochastic. For the dribbling related actions, there will be a small probability for agents to end up dribbling into an adjacent (but wrong) grid. There is also some possibility of agents kicks going wayward from the goal after executing the `KICK` action. This probability of kicking the ball depends on the location of the grid that the agent executes the `KICK` action from.
+Environment transitions resulting from the actions are stochastic. For the dribbling actions, there will be a small probability for agents to end up dribbling into an adjacent (but wrong) grid. There is also the possibility of agent's kicks going wayward from the goal after executing the `KICK` action. This probability of kicking the ball depends on the location in the grid that the agent executes the `KICK` action from.
 
-## Statuses
-Status are integers that denote certain terminal events in the game. It will always be 0 when the agents are in the middle of a game. Other numbers might denote different events like a goal successfully scored, ball kicked out of bounds, or episodes running out of time. Full information of the possible statuses for the HFO environment can be seen at `HFO/bin/HFO` script inside the HFO codes given in the original HFO repository.
+## Status
+Status are integers that denote certain terminal events in the game. It will always be 0 when the agents are in the middle of a game. Other numbers might denote different events like a goal successfully scored, ball kicked out of bounds, or episodes running out of time. Full information of the possible status values for the HFO environment can be seen at `HFO/bin/HFO` script inside the HFO codes given in the original HFO repository.
 
