@@ -55,6 +55,15 @@ The implemented version is the very first working version, therefore not the mos
 
 ## Exercise 3: Asyncronous Reinforcement Learning
 
+The implemented version is the very first working version, therefore not the most optimal, its performance is
+
+### To-Do
+
+* Run without using the greedy policy and compare trained and not-trained models
+* Save the network
+
+### Metrics 
+
 Without learning
 
 | metric | value |
@@ -69,3 +78,14 @@ Without learning
 | Out of time | 19 |
 
 With learning
+
+| metric | value |
+| --- | --- |
+| TotalFrames | xxx |
+| Avg Frames Per Trial | xxx |
+| Avg Frames per Goal  | xxx |
+| Trials | xxx |
+| Goals  | xxx |
+| Defense Captured | xxx |
+| Balls out of Bounds | xxx |
+| Out of time | xxx |

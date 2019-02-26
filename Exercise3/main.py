@@ -22,6 +22,8 @@ parser.add_argument('--log_interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--num_processes', type=int, default=2, metavar='N',
                     help='how many training processes to use (default: 2)')
+parser.add_argument('--eval', type=bool, default=False, help='Whether or not this trial
+                        is in evaluation mode. If it easy greed policy is always used')
 
 # Use this script to handle arguments and 
 # initialize important components of your experiment.
@@ -62,6 +64,7 @@ if __name__ == "__main__" :
                 p = mp.Process(target=train, args=trainingArgs)
                 p.start()
                 processes.append(p)
+
         for p in processes:
                 p.join()
 
