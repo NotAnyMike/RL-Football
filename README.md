@@ -41,6 +41,7 @@ There is some thing that I dont know understand, mainly why do they call an `age
 
 The implemented version is the very first working version, therefore not the most optimal, its performance is
 
+
 | metric | value |
 | --- | --- |
 | TotalFrames | 156006 |
@@ -51,3 +52,20 @@ The implemented version is the very first working version, therefore not the mos
 | Defense Captured | 1 |
 | Balls out of Bounds | 450 |
 | Out of time | 0 |
+
+## Exercise 3: Asyncronous Reinforcement Learning
+
+Without learning
+
+| metric | value |
+| --- | --- |
+| TotalFrames | 616553 |
+| Avg Frames Per Trial | 123.3 |
+| Avg Frames per Goal  | 185.0 |
+| Trials | 5001 |
+| Goals  | 1811  |
+| Defense Captured | 177 |
+| Balls out of Bounds | 2994 |
+| Out of time | 19 |
+
+With learning

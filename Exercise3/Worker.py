@@ -76,7 +76,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                                         shared_param._grad = param.grad
                                         #value_network._grad = target_value_network.grad
                                 # Take a step
-                                optimizer.step()
+                                #optimizer.step()
                                 # Clean gradients
                                 optimizer.zero_grad()
                         target_value_network.zero_grad()
