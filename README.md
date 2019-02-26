@@ -17,8 +17,7 @@ The optimal policy and optimal values are
 
 ## Exercise 2: Different TD algorithms
 
-### Q-learning algorithms
-
+### Q-learning algorithms 
 The implemented version is the very first working version, therefore not the most optimal, its performance is
 
 | metric | value |
@@ -64,6 +63,7 @@ The implemented version is the very first working version, therefore not the mos
 - [x] Try different `I_async` and `I_something else`
 - [x] Run without using the greedy policy and compare trained and not-trained models
 - [x] Save the network
+- [ ] Figure out how to know if player has the ball and add it to the state
 - [ ] Suppose everything is 2D
 
 ### Metrics 

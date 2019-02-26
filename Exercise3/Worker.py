@@ -30,7 +30,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 num_episodes = (args.episodes, args.eval_episodes)
 
         gamma = 0.99
-        epsilon = 0.8
+        epsilon = 0.9
         for episodes in num_episodes:
 
                 loss_func = nn.MSELoss()
@@ -112,7 +112,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         hfoEnv.reset()
 
                 if args.eval == False:
-                        args.eval == True
+                        args.eval = True
 
         # Finishing training and showing stats
         hfoEnv.quitGame()

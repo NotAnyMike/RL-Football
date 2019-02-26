@@ -52,8 +52,8 @@ if __name__ == "__main__" :
         counter = mp.Value('i', 0)
         lock = mp.Lock()
         
-        I_tar = 500
-        I_async = 100
+        I_tar = 20
+        I_async = 5
 
         processes = []
         name = str(time())
