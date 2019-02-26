@@ -2,6 +2,7 @@
 # encoding utf-8
 
 import argparse
+from time import time
 
 import torch
 import torch.multiprocessing as mp
@@ -12,8 +13,10 @@ from SharedAdam import SharedAdam
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Asynchronous 1-step Q-learning')
-parser.add_argument('--episodes', type=int, default=10, metavar='N',
-                    help='number of epochs to train (default: 10)')
+parser.add_argument('--eval_episodes', type=int, default=500, metavar='n',
+                    help='number of epochs to evaluate (default: 500)')
+parser.add_argument('--episodes', type=int, default=500, metavar='n',
+                    help='number of epochs to train (default: 500)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
                     help='learning rate (default: 0.01)')
 parser.add_argument('--seed', type=int, default=1, metavar='S',
@@ -52,6 +55,7 @@ if __name__ == "__main__" :
         I_async = 2
 
         processes = []
+        name = str(time())
         for idx in range(0, args.num_processes):
 
                 target_value_network = ValueNetwork().to(device)
@@ -65,8 +69,12 @@ if __name__ == "__main__" :
                 p.start()
                 processes.append(p)
 
+                saveModelNetwork(value_network, "trained_models/"+ name)
+
         for p in processes:
                 p.join()
 
-
+        print("##################################################")
+        print("###################### done ######################")
+        print("##################################################")
 

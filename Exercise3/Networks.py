@@ -13,10 +13,10 @@ class ValueNetwork(nn.Module):
                 super(ValueNetwork, self).__init__()
                 hidden_sizes = [50, 1]
                 if features_level == "high":
-                        input_dim = 15+1
+                        input_dim = 15+4
                 else:
-                        input_dim = 68+1
-                self.layers = []
+                        input_dim = 68+4
+
                 self.layers = nn.ModuleList()
 
                 for size in hidden_sizes:
@@ -28,5 +28,6 @@ class ValueNetwork(nn.Module):
                 for layer in self.layers[:-1]:
                         inputs = F.relu(layer(inputs))
                 inputs = self.layers[-1](inputs)
+                inputs = torch.nn.Softmax(inputs)
 
                 return inputs

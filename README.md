@@ -59,8 +59,13 @@ The implemented version is the very first working version, therefore not the mos
 
 ### To-Do
 
-* Run without using the greedy policy and compare trained and not-trained models
-* Save the network
+- [x] Use one hot encoding
+- [x] Remove the gradients to the target (with `detach` or `need_grads=False`
+- [x] Use `torch.Tensor([rewards])
+- [ ] Try different `I_async` and `I_something else`
+- [ ] Run without using the greedy policy and compare trained and not-trained models
+- [ ] Save the network
+- [ ] Suppose everything is 2D
 
 ### Metrics 
 
