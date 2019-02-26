@@ -11,7 +11,6 @@ until
 ![eq2](https://latex.codecogs.com/gif.latex?%24%5CDelta%20%5Cleftarrow%20%5Cmax%28%5CDelta%2C%20%7Cv-V%28s%29%7C%29%24)
 
 is small enought, in order solve a toy example, 
-
 The optimal policy and optimal values are
 
 ![sol](Exercise1/img/exc1.png)
@@ -62,9 +61,9 @@ The implemented version is the very first working version, therefore not the mos
 - [x] Use one hot encoding
 - [x] Remove the gradients to the target (with `detach` or `need_grads=False`
 - [x] Use `torch.Tensor([rewards])
-- [ ] Try different `I_async` and `I_something else`
-- [ ] Run without using the greedy policy and compare trained and not-trained models
-- [ ] Save the network
+- [x] Try different `I_async` and `I_something else`
+- [x] Run without using the greedy policy and compare trained and not-trained models
+- [x] Save the network
 - [ ] Suppose everything is 2D
 
 ### Metrics 

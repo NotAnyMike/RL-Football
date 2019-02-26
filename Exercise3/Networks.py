@@ -28,6 +28,6 @@ class ValueNetwork(nn.Module):
                 for layer in self.layers[:-1]:
                         inputs = F.relu(layer(inputs))
                 inputs = self.layers[-1](inputs)
-                inputs = torch.nn.Softmax(inputs)
+                #inputs = torch.nn.Softmax(inputs) # We are not calculating probabilities
 
                 return inputs

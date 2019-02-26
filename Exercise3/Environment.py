@@ -91,11 +91,11 @@ class HFOEnv(object):
                     print("#############################################")
 
                 if status == 1:
-                        reward += 1.0
+                        reward += 50.0
                 elif status == 0:
                         reward -= 0.1
                 elif status > 1:
-                        reward -= 1.0
+                        reward -= 10.0
 
                 return reward, info
 

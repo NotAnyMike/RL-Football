@@ -14,31 +14,31 @@ from Environment import HFOEnv
 import random
 
 def train(idx, args, value_network, target_value_network, optimizer, lock, counter, 
-                port, seed, I_tar, I_async, name):
+                port, seed, I_tar, I_async, name=None):
 
         hfoEnv = HFOEnv(numTeammates=0, numOpponents=1, port=port, seed=seed)
         hfoEnv.connectToServer()
 
-        episodeNumber = 0
-        episodeReward = 0
-        episodeSteps  = 0
-        gamma = 0.99
-        epsilon = 0.8
-        t = 0
-        loss_func = nn.MSELoss()
-        state1 = hfoEnv.reset()
         if name == None:
                 name = str(time())
         configure("tb/" + name, flush_secs=5)
 
         if args.eval:
-                model.eval()
                 num_episodes = (args.eval_episodes)
         else:
-                model.train()
+                target_value_network.train()
                 num_episodes = (args.episodes, args.eval_episodes)
 
+        gamma = 0.99
+        epsilon = 0.8
         for episodes in num_episodes:
+
+                loss_func = nn.MSELoss()
+                t = 0
+                episodeNumber = 0
+                episodeReward = 0
+                episodeSteps  = 0
+                state1 = hfoEnv.reset()
                 
                 if args.eval:
                         print("##################################################")
@@ -48,13 +48,13 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 while episodeNumber <= episodes:
                         #train_epoch(epoch, args, model, device, train_loader, optimizer)
                         
-                        if args.eval or np.random.random() < epsilon:
+                        if args.eval or np.random.random() <= epsilon:
                                 qs = [computePrediction(state1,a,value_network) 
                                                 for a in hfoEnv.possibleActions]
                                 action = np.argmax(qs)
                                 print("runing greedy") 
                         else:
-                                action = random.randint(0,len(hfoEnv.possibleActions))
+                                action = random.randint(0,len(hfoEnv.possibleActions)-1)
                                 print("running random") 
 
                         a1 = hfoEnv.possibleActions[action]
@@ -118,12 +118,15 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
         hfoEnv.quitGame()
 
 def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork):
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         if done:
-                y = torch.Tensor([reward]))
+                y = torch.Tensor([reward]).to(device)
         else:
                 qs = [computePrediction(nextObservation,a,targetNetwork) for a in range(4)]
                 q_max = np.max(qs)
-                y = torch.Tensor([reward]) + discountFactor*q_max
+                y = torch.Tensor([reward]).to(device) + discountFactor*q_max
         return y.detach()
 
 def computePrediction(state, action, valueNetwork, possible_actions=None):
@@ -136,10 +139,10 @@ def computePrediction(state, action, valueNetwork, possible_actions=None):
         if type(action) == str: 
                 action = possible_actions.index(action)
 
-        actions = [0]*len(possibleActions)
+        actions = [0]*len(possible_actions)
         actions[action] = 1
 
-        inputs = np.concatenate([state,action])
+        inputs = np.concatenate([state,actions])
         inputs = torch.from_numpy(inputs)
 
         return valueNetwork(inputs.to('cuda'))

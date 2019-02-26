@@ -3,6 +3,7 @@
 
 import argparse
 from time import time
+import sys
 
 import torch
 import torch.multiprocessing as mp
@@ -25,8 +26,8 @@ parser.add_argument('--log_interval', type=int, default=10, metavar='N',
                     help='how many batches to wait before logging training status')
 parser.add_argument('--num_processes', type=int, default=2, metavar='N',
                     help='how many training processes to use (default: 2)')
-parser.add_argument('--eval', type=bool, default=False, help='Whether or not this trial
-                        is in evaluation mode. If it easy greed policy is always used')
+parser.add_argument('--eval', type=bool, default=False, help='Whether or not this trial' \
+                        'is in evaluation mode. If it easy greed policy is always used')
 
 # Use this script to handle arguments and 
 # initialize important components of your experiment.
@@ -51,8 +52,8 @@ if __name__ == "__main__" :
         counter = mp.Value('i', 0)
         lock = mp.Lock()
         
-        I_tar = 2
-        I_async = 2
+        I_tar = 500
+        I_async = 100
 
         processes = []
         name = str(time())
@@ -64,17 +65,20 @@ if __name__ == "__main__" :
 
                 seed = args.seed + idx
                 port = 6000 + 100*idx
-                trainingArgs = (idx, args, value_network, target_value_network, optimizer, lock, counter, port, seed, I_tar, I_async)
+                trainingArgs = (idx, args, value_network, target_value_network, optimizer, lock, counter, port, seed, I_tar, I_async, name)
                 p = mp.Process(target=train, args=trainingArgs)
                 p.start()
                 processes.append(p)
 
-                saveModelNetwork(value_network, "trained_models/"+ name)
 
         for p in processes:
                 p.join()
 
+        saveModelNetwork(value_network, "trained_models/"+ name)
+
         print("##################################################")
         print("###################### done ######################")
         print("##################################################")
+
+        sys.exit()
 
