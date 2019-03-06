@@ -17,6 +17,8 @@ The optimal policy and optimal values are
 
 ## Exercise 2: Different TD algorithms
 
+Let's try and use this one to check the correctness implementation of the algorithms https://github.com/dennybritz/reinforcement-learning
+
 ### Q-learning algorithms 
 The implemented version is the very first working version, therefore not the most optimal, its performance is
 
