@@ -4,7 +4,7 @@ import itertools
 
 from pdb import set_trace
 import numpy as np
-import matplolib.pyplot as plt
+from tensorboard_logger import configure, log_value
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
@@ -102,6 +102,8 @@ class QLearningAgent(Agent):
 
 if __name__ == '__main__':
 
+        configure("tb", flush_secs=5)
+
         parser = argparse.ArgumentParser()
         parser.add_argument('--id', type=int, default=0)
         parser.add_argument('--numOpponents', type=int, default=0)
@@ -119,13 +121,14 @@ if __name__ == '__main__':
         numEpisodes = args.numEpisodes
 
         rewards_buffer = []
-        episode_lenght  = []
+        episode_length = []
 
         # Run training using Q-Learning
         numTakenActions = 0 
         for episode in range(numEpisodes):
                 status = 0
                 observation = hfoEnv.reset()
+                cumulative_rewards = 0
                 
                 #while status==0:
                 for t in itertools.count():
@@ -144,10 +147,13 @@ if __name__ == '__main__':
                         
                         observation = nextObservation
 
+                        cumulative_rewards += reward
 
                         if done:
                                 rewards_buffer.append(cumulative_rewards)
                                 episode_length.append(t)
+                                log_value("episode_rewards", cumulative_rewards, episode)
+                                log_value("episode_length", t, episode)
                                 break
         
         print(agent._Q.values())
