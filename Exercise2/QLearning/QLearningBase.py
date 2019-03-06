@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # encoding utf-8
+import itertools
 
 from pdb import set_trace
 import numpy as np
+import matplolib.pyplot as plt
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
@@ -46,9 +48,7 @@ class QLearningAgent(Agent):
                 '''
                 Choose the best action and return it
                 '''
-                p = self._epsilon #+ (self._epsilon/len(self.possibleActions))
-                case = np.random.binomial(1, p, 1)
-                if case: # Choose greedy action
+                if np.random.random() <= self._epsilon: # Choose greedy action
                         max_val = None # To allow negative values
                         opt_act = []
                         for a in self.possibleActions:
@@ -118,13 +118,17 @@ if __name__ == '__main__':
         agent = QLearningAgent(learningRate = 0.1, discountFactor = 0.99, epsilon = 1.0)
         numEpisodes = args.numEpisodes
 
+        rewards_buffer = []
+        episode_lenght  = []
+
         # Run training using Q-Learning
         numTakenActions = 0 
         for episode in range(numEpisodes):
                 status = 0
                 observation = hfoEnv.reset()
                 
-                while status==0:
+                #while status==0:
+                for t in itertools.count():
                         learningRate, epsilon = agent.computeHyperparameters(numTakenActions, episode)
                         agent.setEpsilon(epsilon)
                         agent.setLearningRate(learningRate)
@@ -139,5 +143,11 @@ if __name__ == '__main__':
                         update = agent.learn()
                         
                         observation = nextObservation
+
+
+                        if done:
+                                rewards_buffer.append(cumulative_rewards)
+                                episode_length.append(t)
+                                break
         
         print(agent._Q.values())
