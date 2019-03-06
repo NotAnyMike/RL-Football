@@ -1,72 +1,140 @@
 #!/usr/bin/env python3
 # encoding utf-8
 
+import numpy as np
+
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
 import argparse
 
 class MonteCarloAgent(Agent):
-	def __init__(self, discountFactor, epsilon, initVals=0.0):
-		super(MonteCarloAgent, self).__init__()
+        def __init__(self, discountFactor, epsilon, initVals=0.0):
+                super(MonteCarloAgent, self).__init__()
+                
+                self._gamma = discountFactor
+                self._epsilon = epsilon
+                self._initVals = initVals
 
-	def learn(self):
-		raise NotImplementedError
+                self._Q  = {}
+                self._pi = {} # a dict of dicts
+                self._returns = {}
+                self._episodes = []
 
-	def toStateRepresentation(self, state):
-		raise NotImplementedError
+        def learn(self):
+                G = 0
+                q_encountered = []
+                for i,(s,a,r)in enumerate(self._episodes):
+                        if tuple([s,a]) not in self._episodes[:i]:
+                                G = self._gamma*G + r
+                                self._add_G(s,a,G)
+                                q_sa = np.mean(self._returns[tuple([s,a])])
+                                self._Q[tuple([s,a])] = q_sa
+                                q_encountered.append(q_sa)
 
-	def setExperience(self, state, action, reward, status, nextState):
-		raise NotImplementedError
+                                opt_act = self._best_act(s)
 
-	def setState(self, state):
-		raise NotImplementedError
+                                n = len(self.possibleActions)
+                                pi = []
+                                for act in self.possibleActions:
+                                        if act == opt_act:
+                                                pi.append(1-self._epsilon+self._epsilon/n)
+                                        else:
+                                                pi.append(self._epsilon/n)
+                                self._pi[tuple([s,a])] = pi
 
-	def reset(self):
-		raise NotImplementedError
+                return self._Q, q_encountered
 
-	def act(self):
-		raise NotImplementedError
+        def _best_act(self, state):
+                max_val = None # To allow negative values
+                opt_act = []
+                for a in self.possibleActions:
+                    q = self.Q(state, a)
+                    if max_val == None or q > max_val:
+                        opt_act = [a]
+                        max_val = q
+                    elif q == max_val:
+                        opt_act.append(a) 
+                a = np.random.choice(opt_act)
+                return a
 
-	def setEpsilon(self, epsilon):
-		raise NotImplementedError
+        def Q(self, state, action):
+            if tuple([state,action]) not in self._Q.keys():
+                self._Q[tuple([state,action])] = 0.0
 
-	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		raise NotImplementedError
+            return self._Q[tuple([state,action])]
+                                
+        def _add_G(self,s,a,G):
+                if tuple([s,a]) not in self._returns.keys():
+                        self._returns[tuple([s,a])] = []
+                self._returns[tuple([s,a])].append(G)
+        
+        def toStateRepresentation(self, state):
+                return tuple(state)
+
+        def setExperience(self, state, action, reward, status, nextState):
+                self._episodes.append(tuple([state,action,reward]))
+
+        def setState(self, state):
+                self._s1 = state
+
+        def reset(self):
+                self._episodes = []
+
+        def act(self):
+                '''
+                Choice with parameters, similar to a multinomial dist
+                '''
+                pi_a = self.pi(self._s1)
+                a = np.random.choice(list(self.possibleActions), p=list(pi_a.values()))
+                return a
+
+        def pi(self, s):
+                if tuple(s) not in self._pi.keys():
+                        n = len(self.possibleActions)
+                        self._pi[tuple(s)] = dict([[a,self._epsilon/n] for a in self.possibleActions])
+                return self._pi[tuple(s)]
+
+        def setEpsilon(self, epsilon):
+                self._epsilon = epsilon
+
+        def computeHyperparameters(self, numTakenActions, episodeNumber):
+                # TODO compute epsilon
+                return self._epsilon
 
 
 if __name__ == '__main__':
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--id', type=int, default=0)
-	parser.add_argument('--numOpponents', type=int, default=0)
-	parser.add_argument('--numTeammates', type=int, default=0)
-	parser.add_argument('--numEpisodes', type=int, default=500)
+        parser = argparse.ArgumentParser()
+        parser.add_argument('--id', type=int, default=0)
+        parser.add_argument('--numOpponents', type=int, default=0)
+        parser.add_argument('--numTeammates', type=int, default=0)
+        parser.add_argument('--numEpisodes', type=int, default=500)
 
-	args=parser.parse_args()
+        args=parser.parse_args()
 
-	#Init Connections to HFO Server
-	hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
-	hfoEnv.connectToServer()
+        #Init Connections to HFO Server
+        hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
+        hfoEnv.connectToServer()
 
-	# Initialize a Monte-Carlo Agent
-	agent = MonteCarloAgent(discountFactor = 0.99, epsilon = 1.0)
-	numEpisodes = args.numEpisodes
-	numTakenActions = 0
-	# Run training Monte Carlo Method
-	for episode in range(numEpisodes):	
-		agent.reset()
-		observation = hfoEnv.reset()
-		status = 0
+        # Initialize a Monte-Carlo Agent
+        agent = MonteCarloAgent(discountFactor = 0.99, epsilon = 1.0)
+        numEpisodes = args.numEpisodes
+        numTakenActions = 0
+        # Run training Monte Carlo Method
+        for episode in range(numEpisodes):      
+                agent.reset()
+                observation = hfoEnv.reset()
+                status = 0
 
-		while status==0:
-			epsilon = agent.computeHyperparameters(numTakenActions, episode)
-			agent.setEpsilon(epsilon)
-			obsCopy = observation.copy()
-			agent.setState(agent.toStateRepresentation(obsCopy))
-			action = agent.act()
-			numTakenActions += 1
-			nextObservation, reward, done, status = hfoEnv.step(action)
-			agent.setExperience(agent.toStateRepresentation(obsCopy), action, reward, status, agent.toStateRepresentation(nextObservation))
-			observation = nextObservation
+                while status==0:
+                        epsilon = agent.computeHyperparameters(numTakenActions, episode)
+                        agent.setEpsilon(epsilon)
+                        obsCopy = observation.copy()
+                        agent.setState(agent.toStateRepresentation(obsCopy))
+                        action = agent.act()
+                        numTakenActions += 1
+                        nextObservation, reward, done, status = hfoEnv.step(action)
+                        agent.setExperience(agent.toStateRepresentation(obsCopy), action, reward, status, agent.toStateRepresentation(nextObservation))
+                        observation = nextObservation
 
-		agent.learn()
+                agent.learn()
