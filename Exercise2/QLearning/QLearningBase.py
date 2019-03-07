@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # encoding utf-8
 import itertools
-from time import time
 import argparse
+from time import time
 
 from pdb import set_trace
-import numpy as np
 from tensorboard_logger import configure, log_value
+import numpy as np
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
@@ -16,16 +16,16 @@ class QLearningAgent(Agent):
         def __init__(self, learningRate, discountFactor, epsilon, initVals=0.0):
                 super(QLearningAgent, self).__init__()
 
-                self._LR = learningRate # Constant value
                 self._lr = learningRate
                 self._gamma = discountFactor
                 self._epsilon  = epsilon
-                self._EPSILON = epsilon
                 self._Q = {}
                 self._steps = 0
                 self._episode = 0
                 self._initVals = initVals
 
+                self._LR = learningRate # Constant value
+                self._EPSILON = epsilon
                 self._min_epsilon = 0.01
                 self._min_lr = 0.01
 
@@ -79,7 +79,7 @@ class QLearningAgent(Agent):
                 self._epsilon = epsilon
 
         def reset(self):
-                self._epsilon = self._epsilon0
+                #self._epsilon = self._epsilon0
                 #self._Q = {}
                 #self._steps = 0
                 #self._episode = 0
@@ -99,12 +99,16 @@ class QLearningAgent(Agent):
                 #epsilon = (self._EPSILON - self._min_epsilon ) / ((episodeNumber+1) ** (1/2)) \
                 #        + self._min_epsilon
 
-                if episodeNumber > 100:
-                    episodeNumber -= 100
-                    epsilon = self._EPSILON - self._EPSILON / 300 * episodeNumber
-                    lr = self._LR - self._LR / 300 * episodeNumber
+                delay = 0
+                if episodeNumber > delay:
+                    epsilon = self._EPSILON - self._EPSILON / 400 * (episodeNumber-delay)
                 else: 
                     epsilon = self._EPSILON
+
+                delay = 100
+                if episodeNumber > delay:
+                    lr = self._LR - self._LR / 300 * (episodeNumber-delay)
+                else: 
                     lr = self._LR
 
                 lr = lr if lr >= self._min_lr else self._min_lr
@@ -114,7 +118,7 @@ class QLearningAgent(Agent):
 
 if __name__ == '__main__':
 
-        configure("tb/" + str(time()), flush_secs=5)
+        configure("tb/qlearning" + str(time()), flush_secs=5)
 
         parser = argparse.ArgumentParser()
         parser.add_argument('--id', type=int, default=0)
@@ -129,22 +133,24 @@ if __name__ == '__main__':
         hfoEnv.connectToServer()
 
         # Initialize a Q-Learning Agent
-        agent = QLearningAgent(learningRate = 0.95, discountFactor = 0.95, epsilon = 0.5)
+        agent = QLearningAgent(learningRate = 0.95, discountFactor = 0.95, epsilon = 1.)
         numEpisodes = args.numEpisodes
 
+        # To keep track
         rewards_buffer = []
         episode_length = []
+        history = [10,500]
+        goals = [0]*max(history)
 
         # Run training using Q-Learning
         numTakenActions = 0 
-        history = [10,500]
-        goals = [0]*max(history)
         for episode in range(numEpisodes):
+                agent.reset()
+
                 status = 0
                 observation = hfoEnv.reset()
                 cumulative_rewards = 0
                 
-                #while status==0:
                 for t in itertools.count():
                         learningRate, epsilon = agent.computeHyperparameters(numTakenActions, episode)
                         agent.setEpsilon(epsilon)

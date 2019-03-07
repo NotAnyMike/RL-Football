@@ -54,11 +54,17 @@ its performance is
 
 ### SARSA methods
 
-There is some thing that I dont know understand, mainly why do they call an `agent.setExperience` with none values at the end, and what is the main difference with Ql
+Plot of the last 10 goals in training time:
+
+![solution](Exercise2/Files/sarsa-10-goals.png)
+
+Plot of the last 500 goals in training time:
+it will always inscrease up to the episode 500, from there on it can decrease but not very fast. **The maximum is reached around 430 goals out of 500 trials**
+
+![solution](Exercise2/Files/sarsa-500-goals.png)
+
 
 ### MonteCarlo Control with epsilon soft policies
-
-The implemented version is the very first working version, therefore not the most optimal, its performance is
 
 
 | metric | value |

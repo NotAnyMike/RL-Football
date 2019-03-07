@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # encoding utf-8
+import itertools
+import argparse
+from time import time
 
 import numpy as np
+from tensorboard_logger import configure, log_value
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
-import argparse
+from hfo import GOAL
 
 class MonteCarloAgent(Agent):
         def __init__(self, discountFactor, epsilon, initVals=0.0):
@@ -15,6 +19,9 @@ class MonteCarloAgent(Agent):
                 self._epsilon = epsilon
                 self._initVals = initVals
 
+                self._EPSILON = epsilon
+                self._min_epsilon = 0.05
+
                 self._Q  = {}
                 self._pi = {} # a dict of dicts
                 self._returns = {}
@@ -23,10 +30,10 @@ class MonteCarloAgent(Agent):
         def learn(self):
                 G = 0
                 q_encountered = []
-                for i,(s,a,r)in enumerate(self._episodes):
-                        if tuple([s,a]) not in self._episodes[:i]:
-                                G = self._gamma*G + r
-                                self._add_G(s,a,G)
+                for i,(s,a,r) in enumerate(self._episodes):
+                        G = self._gamma*G + r
+                        if tuple([s,a]) not in self._episodes[:i]: # TODO not working
+                                self._add_G(s,a,G) 
                                 q_sa = np.mean(self._returns[tuple([s,a])])
                                 self._Q[tuple([s,a])] = q_sa
                                 q_encountered.append(q_sa)
@@ -37,10 +44,10 @@ class MonteCarloAgent(Agent):
                                 pi = []
                                 for act in self.possibleActions:
                                         if act == opt_act:
-                                                pi.append(1-self._epsilon+self._epsilon/n)
+                                                pi.append(1.0-self._epsilon+self._epsilon/n)
                                         else:
                                                 pi.append(self._epsilon/n)
-                                self._pi[tuple([s,a])] = pi
+                                self._pi[tuple([s,a])] = tuple(pi)
 
                 return self._Q, q_encountered
 
@@ -85,13 +92,14 @@ class MonteCarloAgent(Agent):
                 Choice with parameters, similar to a multinomial dist
                 '''
                 pi_a = self.pi(self._s1)
-                a = np.random.choice(list(self.possibleActions), p=list(pi_a.values()))
+                print(pi_a.values())
+                a = np.random.choice(self.possibleActions, p=list(pi_a.values()))
                 return a
 
         def pi(self, s):
                 if tuple(s) not in self._pi.keys():
                         n = len(self.possibleActions)
-                        self._pi[tuple(s)] = dict([[a,self._epsilon/n] for a in self.possibleActions])
+                        self._pi[tuple(s)] = dict([[a,1.0/n] for a in self.possibleActions])
                 return self._pi[tuple(s)]
 
         def setEpsilon(self, epsilon):
@@ -99,22 +107,40 @@ class MonteCarloAgent(Agent):
 
         def computeHyperparameters(self, numTakenActions, episodeNumber):
                 # TODO compute epsilon
-                return self._epsilon
+                self._episode = episodeNumber
+                self._steps = numTakenActions
+
+                if episodeNumber > 100:
+                    episodeNumber -= 100
+                    epsilon = self._EPSILON - self._EPSILON / 200 * episodeNumber
+                else: 
+                    epsilon = self._EPSILON
+
+                epsilon = epsilon if epsilon >= self._min_epsilon else self._min_epsilon
+
+                return epsilon
 
 
 if __name__ == '__main__':
+
+        configure("tb/MC" + str(time()))
 
         parser = argparse.ArgumentParser()
         parser.add_argument('--id', type=int, default=0)
         parser.add_argument('--numOpponents', type=int, default=0)
         parser.add_argument('--numTeammates', type=int, default=0)
-        parser.add_argument('--numEpisodes', type=int, default=500)
+        parser.add_argument('--numEpisodes', type=int, default=1000)
 
         args=parser.parse_args()
 
         #Init Connections to HFO Server
         hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
         hfoEnv.connectToServer()
+
+        rewards_buffer = []
+        episode_length = []
+        history = [10,500]
+        goals = [0]*max(history)
 
         # Initialize a Monte-Carlo Agent
         agent = MonteCarloAgent(discountFactor = 0.99, epsilon = 1.0)
@@ -125,8 +151,9 @@ if __name__ == '__main__':
                 agent.reset()
                 observation = hfoEnv.reset()
                 status = 0
+                cumulative_rewards = 0
 
-                while status==0:
+                for t in itertools.count():
                         epsilon = agent.computeHyperparameters(numTakenActions, episode)
                         agent.setEpsilon(epsilon)
                         obsCopy = observation.copy()
@@ -136,5 +163,21 @@ if __name__ == '__main__':
                         nextObservation, reward, done, status = hfoEnv.step(action)
                         agent.setExperience(agent.toStateRepresentation(obsCopy), action, reward, status, agent.toStateRepresentation(nextObservation))
                         observation = nextObservation
+                        cumulative_rewards += reward
+
+                        if done:
+                                if status == GOAL:
+                                    goals.append(1)
+                                else:
+                                    goals.append(0)
+
+                                rewards_buffer.append(cumulative_rewards)
+                                episode_length.append(t)
+                                log_value("episode/rewards", cumulative_rewards, episode)
+                                log_value("episode/length", t, episode)
+                                for h in history:
+                                    log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+                                log_value("training/epsilon", epsilon, episode)
+                                break
 
                 agent.learn()

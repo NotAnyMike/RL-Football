@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 # encoding utf-8
+import itertools
+import argparse
+from time import time
 
 import numpy as np
+from tensorboard_logger import configure, log_value
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
-from DiscreteHFO.Agent import Agent
-import argparse
+from DiscreteHFO.Agent import Agent 
+from hfo import GOAL 
 
 class SARSAAgent(Agent): 
         def __init__(self, learningRate, discountFactor, epsilon=1, initVals=0.0):
@@ -16,47 +20,47 @@ class SARSAAgent(Agent):
                 self._epsilon = epsilon
                 self._initVals = initVals
 
+                self._LR = learningRate # Constant value
+                self._EPSILON = epsilon
+                self._min_epsilon = 0.01
+                self._min_lr = 0.01
+
                 self._Q = {}
 
-        def Q(self, state, action):
-            if tuple([state,action]) not in self._Q.keys():
-                self._Q[tuple([state,action])] = 0.0
+        def Q(self, state):
+            if tuple(state) not in self._Q.keys():
+                self._Q[tuple(state)] = [0.0]*len(self.possibleActions)
 
-            return self._Q[tuple([state,action])]
+            return self._Q[tuple(state)]
 
         def learn(self):
-                q  = self.Q(self._s1, self._a)
-                a2 = self._best_act(self._s2)
-                q2 = self.Q(self._s2, a2)
-                print(self._lr, self._r)
-                delta = self._lr * (self._r + self._gamma * q2 - q)
-                self._Q[tuple([self._s1, self._a])] = q + delta
-                return delta
 
-        def _best_act(self, state):
-                max_val = None # To allow negative values
-                opt_act = []
-                for a in self.possibleActions:
-                    q = self.Q(state, a)
-                    if max_val == None or q > max_val:
-                        opt_act = [a]
-                        max_val = q
-                    elif q == max_val:
-                        opt_act.append(a) 
-                a = np.random.choice(opt_act)
-                return a
+                q1_vals = self.Q(self._s1)
+                q1 = q1_vals[self.possibleActions.index(self._a)]
+                
+                q2_vals = self.Q(self._s2)
+                a2 = self.policy(q2_vals)
+                TD_target = self._r + self._gamma * q2_vals[self.possibleActions.index(a2)]
+
+                TD_delta  = TD_target - q1
+                
+                self._Q[tuple(self._s1)][self.possibleActions.index(self._a)] = q1 + self._lr * TD_delta
+                return TD_delta
 
         def act(self):
                 '''
-                Choose the best action and return it
+                Choose action based on policy
                 '''
-                p = self._epsilon #+ (self._epsilon/len(self.possibleActions))
-                case = np.random.binomial(1, p, 1)
-                if case: # Choose greedy action
-                        a = self._best_act(self._s1)
-                else: # Choose randomly
-                        a = np.random.choice(self.possibleActions)
+                q = self.Q(self._s1)
+                return self.policy(q)
+
+        def policy(self, q_values):
+                actions_prob = np.zeros(len(self.possibleActions)) + \
+                        self._epsilon / len(self.possibleActions)
+                actions_prob[np.argmax(q_values)] += 1. - self._epsilon
+                a = np.random.choice(self.possibleActions, p=actions_prob)
                 return a
+
 
         def setState(self, state):
                 self._s1 = state
@@ -69,7 +73,27 @@ class SARSAAgent(Agent):
                 self._s2 = nextState
 
         def computeHyperparameters(self, numTakenActions, episodeNumber):
-                return self._lr, self._epsilon # TODO
+                #return self._lr, self._epsilon # TODO
+                self._episode = episodeNumber
+                self._steps = numTakenActions
+
+                # 1/x**2 decay
+                #lr = self._LR / ((episodeNumber+1) ** (1/2) )
+                #epsilon = (self._EPSILON - self._min_epsilon ) / ((episodeNumber+1) ** (1/2)) \
+                #        + self._min_epsilon
+
+                if episodeNumber > 100:
+                    episodeNumber -= 100
+                    epsilon = self._EPSILON - self._EPSILON / 200 * episodeNumber
+                    lr = self._LR - self._LR / 400 * episodeNumber
+                else: 
+                    epsilon = self._EPSILON
+                    lr = self._LR
+
+                lr = lr if lr >= self._min_lr else self._min_lr
+                epsilon = epsilon if epsilon >= self._min_epsilon else self._min_epsilon
+
+                return lr, epsilon
 
         def toStateRepresentation(self, state):
                 return tuple(state)
@@ -89,11 +113,13 @@ class SARSAAgent(Agent):
 
 if __name__ == '__main__':
 
+        configure("tb/sarsa" + str(time()))
+
         parser = argparse.ArgumentParser()
         parser.add_argument('--id', type=int, default=0)
         parser.add_argument('--numOpponents', type=int, default=0)
         parser.add_argument('--numTeammates', type=int, default=0)
-        parser.add_argument('--numEpisodes', type=int, default=500)
+        parser.add_argument('--numEpisodes', type=int, default=1000)
 
         args=parser.parse_args()
         
@@ -102,8 +128,14 @@ if __name__ == '__main__':
         hfoEnv = HFOAttackingPlayer(numOpponents = args.numOpponents, numTeammates = args.numTeammates, agentId = args.id)
         hfoEnv.connectToServer()
 
+        # To keep track
+        rewards_buffer = []
+        episode_length = []
+        history = [10,500]
+        goals = [0]*max(history)
+
         # Initialize a SARSA Agent
-        agent = SARSAAgent(0.1, 0.99, 1)
+        agent = SARSAAgent(learningRate=0.95, discountFactor=0.95, epsilon=1)
 
         # Run training using SARSA
         numTakenActions = 0 
@@ -113,9 +145,9 @@ if __name__ == '__main__':
 
                 observation = hfoEnv.reset()
                 nextObservation = None
-                epsStart = True
+                cumulative_rewards = 0
 
-                while status==0:
+                for t in itertools.count():
                         learningRate, epsilon = agent.computeHyperparameters(numTakenActions, episode)
                         agent.setEpsilon(epsilon)
                         agent.setLearningRate(learningRate)
@@ -126,19 +158,32 @@ if __name__ == '__main__':
                         numTakenActions += 1
 
                         nextObservation, reward, done, status = hfoEnv.step(action)
-                        print(obsCopy, action, reward, nextObservation)
                         agent.setExperience(agent.toStateRepresentation(obsCopy), action, reward, status, agent.toStateRepresentation(nextObservation))
                         
-                        if not epsStart :
-                                agent.learn()
-                        else:
-                                epsStart = False
-                        
+                        update = agent.learn()
+
+                        cumulative_rewards += reward
                         observation = nextObservation
 
-                print("return none")
-                agent.setExperience(agent.toStateRepresentation(nextObservation), None, None, None, None)
-                agent.learn()
+                        if done:
+                                if status == GOAL:
+                                    goals.append(1)
+                                else:
+                                    goals.append(0)
+
+                                rewards_buffer.append(cumulative_rewards)
+                                episode_length.append(t)
+                                log_value("episode/rewards", cumulative_rewards, episode)
+                                log_value("episode/length", t, episode)
+                                for h in history:
+                                    log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+                                log_value("training/lr", learningRate, episode)
+                                log_value("training/epsilon", epsilon, episode)
+                                break
+                        
+
+                #agent.setExperience(agent.toStateRepresentation(nextObservation), None, None, None, None)
+                #agent.learn()
 
         print(agent._Q.values())
 
