@@ -29,11 +29,15 @@ The parameters are
 * Epsilon: 0.5 with the same Linear Decay as the learning rate.
 * Minimum epsilon: 0.01 to avoid being stuck at certain positions for longer than 100 steps
 
-![solution](files/Qlearning-10-goals.png)
-Plot of the last 10 goals in training time
+Plot of the last 10 goals in training time:
 
-![solution](files/Qlearning-500-goals.png)
-Plot of the last 500 goals in training time, it will always inscrease up to the episode 500, from there on it can decrease but not very fast
+![solution](Exercise2/Files/Qlearning-10-goals.png)
+
+Plot of the last 500 goals in training time:
+it will always inscrease up to the episode 500, from there on it can decrease but not very fast. **The maximum is reached around 430 goals out of 500 trials**
+
+![solution](Exercise2/Files/Qlearning-500-goals.png)
+
 
 its performance is
 
