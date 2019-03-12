@@ -12,13 +12,14 @@ class HFOEnv(object):
 
         def __init__(self, config_dir = '../../../bin/teams/base/config/formations-dt', 
                 port = 6000, server_addr = 'localhost', team_name = 'base_left', play_goalie = False,
-                numOpponents = 0, numTeammates = 0, seed = 123):
+                numOpponents = 0, numTeammates = 0, seed = 123, headless=False):
 
                 self.config_dir = config_dir
                 self.port = port
                 self.server_addr = server_addr
                 self.team_name = team_name
                 self.play_goalie = play_goalie
+                self.headless = headless
 
                 self.curState = None
                 self.possibleActions = ['MOVE','SHOOT','DRIBBLE','GO_TO_BALL']
@@ -31,12 +32,13 @@ class HFOEnv(object):
 
         # Method to initialize the server for HFO environment
         def startEnv(self):
+                hl = " --headless " if self.headless else ""
                 if self.numTeammates == 0:
-                        os.system("./../../../bin/HFO --seed {} --defense-npcs=0 --defense-agents={} --offense-agents=1 --trials 8000 --untouched-time 500 --frames-per-trial 500 --port {} --fullstate &".format(str(self.seed),
-                                str(self.numOpponents), str(self.port)))
+                        os.system("./../../../bin/HFO --seed {} --defense-npcs=0 --defense-agents={} --offense-agents=1 --trials 8000 --untouched-time 500 --frames-per-trial 500 --port {} --fullstate {} &".format(str(self.seed),
+                                str(self.numOpponents), str(self.port), hl))
                 else :
-                        os.system("./../../../bin/HFO --seed {} --defense-agents={} --defense-npcs=0 --offense-npcs={} --offense-agents=1 --trials 8000 --untouched-time 500 --frames-per-trial 500 --port {} --fullstate &".format(
-                                str(self.seed), str(self.numOpponents), str(self.numTeammates), str(self.port)))
+                        os.system("./../../../bin/HFO --seed {} --defense-agents={} --defense-npcs=0 --offense-npcs={} --offense-agents=1 --trials 8000 --untouched-time 500 --frames-per-trial 500 --port {} --fullstate {} &".format(
+                                str(self.seed), str(self.numOpponents), str(self.numTeammates), str(self.port), hl))
                 time.sleep(5)
 
         # Reset the episode and returns a new initial state for the next episode
@@ -84,6 +86,11 @@ class HFOEnv(object):
 
                 reward = 0.0
                 info = {}
+
+                #print((nextState == self.curState).all())
+                #print("nextState",nextState)
+                #print("state", self.curState)
+                #print("status", status)
 
                 if status == 1:
                     print("#############################################")

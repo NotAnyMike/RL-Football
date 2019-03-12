@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
-#from tensorboard_logger import configure, log_value
+from tensorboard_logger import Logger
 from hfo import GOAL
 
 from Networks import ValueNetwork
@@ -15,14 +15,14 @@ from Environment import HFOEnv
 import random
 
 def train(idx, args, value_network, target_value_network, optimizer, lock, counter, 
-                port, seed, I_tar, I_async, name=None, logger=None):
+                port, seed, I_tar, I_async, name=None):
 
-        hfoEnv = HFOEnv(numTeammates=0, numOpponents=1, port=port, seed=seed)
+        hfoEnv = HFOEnv(numTeammates=0, numOpponents=1, port=port, seed=seed, headless=True)
         hfoEnv.connectToServer()
 
         if name == None:
                 name = str(time())
-        #configure("tb/" + name, flush_secs=5)
+        logger = Logger("tb/" + name, flush_secs=5)
 
         if args.eval:
                 num_episodes = (args.eval_episodes)
@@ -31,10 +31,14 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 num_episodes = (args.episodes, args.eval_episodes)
 
         gamma = 0.99
-        epsilon = 0.9
-        lr = 0.01 # TODO Currently not being used
         windows = [10, 500]
         goal_buffer = [0]*max(windows)
+
+        max_epsilon = 0.99
+        min_epsilon = 0.1
+        total = 200
+
+        epsilon_fn = lambda current : max_epsilon - current*(max_epsilon - min_epsilon)/total if current < total else min_epsilon
 
         for episodes in num_episodes:
 
@@ -52,7 +56,8 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
 
                 while episodeNumber <= episodes:
                         #train_epoch(epoch, args, model, device, train_loader, optimizer)
-                        
+                        epsilon = epsilon_fn(episodeNumber)
+
                         if args.eval or np.random.random() >= epsilon:
                                 qs = [computePrediction(state1,a,value_network) 
                                                 for a in hfoEnv.possibleActions]
@@ -67,11 +72,6 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         
                         #print(state2, reward, done, status, info)
 
-                        if status == GOAL:
-                                goal_buffer.append(1)
-                        else:
-                                goal_buffer.append(0)
-
 
                         y = computeTargets(reward, state2, gamma, done, target_value_network)
 
@@ -83,15 +83,23 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         t += 1
                         episodeSteps += 1
                         with lock:
-                                counter.value += counter.value + 1
+                                counter.value = counter.value + 1
 
                         if done:
+
+                                if status == GOAL:
+                                        goal_buffer.append(1)
+                                else:
+                                        goal_buffer.append(0)
+
                                 learning_str = "eval-" if args.eval else ""
-                                logger.log_value(learning_str + 'episode/reward', episodeReward, counter.value)
+                                logger.log_value('episode/' + learning_str + 'reward',
+                                        episodeReward, episodeNumber)
+                                logger.log_value('hyperparameters/epsilon', epsilon, episodeNumber)
                                 for window in windows:
                                         logger.log_value(learning_str + "goals/%i" % window,
-                                                        sum(goal_buffer[-window:]),
-                                                        counter.value)
+                                                        np.sum(goal_buffer[-window:]),
+                                                        episodeNumber)
                                 episodeNumber += 1
                                 episodeReward = 0.0
                                 episodeSteps  = 0

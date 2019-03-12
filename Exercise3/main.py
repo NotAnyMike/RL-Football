@@ -37,8 +37,6 @@ parser.add_argument('--eval', type=bool, default=False, help='Whether or not thi
 # your models, torch's multiprocessing methods, etc.
 if __name__ == "__main__" :     
 
-        logger = Logger("tb/" + str(timedate.now())) 
-
         args = parser.parse_args()
 
         use_cuda = torch.cuda.is_available()
@@ -56,11 +54,11 @@ if __name__ == "__main__" :
         counter = mp.Value('i', 0)
         lock = mp.Lock()
         
-        I_tar = 20
+        I_tar = 10
         I_async = 5
 
         processes = []
-        name = str(time())
+        name = str(datetime.now()) + "_"
         for idx in range(0, args.num_processes):
 
                 target_value_network = ValueNetwork().to(device)
@@ -69,7 +67,7 @@ if __name__ == "__main__" :
 
                 seed = args.seed + idx
                 port = 6000 + 100*idx
-                trainingArgs = (idx, args, value_network, target_value_network, optimizer, lock, counter, port, seed, I_tar, I_async, name, logger)
+                trainingArgs = (idx, args, value_network, target_value_network, optimizer, lock, counter, port, seed, I_tar, I_async, name+str(idx))
                 p = mp.Process(target=train, args=trainingArgs)
                 p.start()
                 processes.append(p)
