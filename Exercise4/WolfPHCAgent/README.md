@@ -1,10 +1,12 @@
 # Exercise 4  - WoLF-PHC
 
-In this task, you are required to implement the WoLF-PHC algorithm ([**Bowling and Veloso, 2001**](http://www.cs.cmu.edu/~mmv/papers/01ijcai-mike.pdf)). Unlike Q-Learning based algorithms that follow a greedy policy update, this algorithm follows a hill climbing approach to train a stochastic policy for agents. However, just like Q-Learning, it relies on a table of state-action values to calculate the updates to the policy. To get a better description of the algorithm, refer to the provided paper.
+In this task, you are required to implement the WoLF-PHC algorithm ([**Bowling and Veloso, 2001**](http://www.cs.cmu.edu/~mmv/papers/01ijcai-mike.pdf)). Unlike Q-Learning based algorithms that follow a greedy policy update, this algorithm follows a hill climbing approach to train a stochastic policy for agents. However, just like Q-Learning, it relies on a table of state-action values to calculate the updates to the policy. To get a better description of the algorithm, refer to the following pseudocode.
+
+![WoLF-PHC Algorithm](images/Wolf.png?raw=true)
 
 ## Specifications
 ### Automarking requirements
-To ensure that your codes can be used by the marking script, ensure that all the necessary functions have been implemented. To check whether these implementations are correct, you **must** use the code snippet given in `__main__` to test your implementation. This code snippet provides an outline of how your implemented functions will interact to train a team of agents using WoLF-PHC. If you just modify the number of episodes and the hyperparameters for training, you can use this code to train a team of Joint Action Learning agents.
+To ensure that your codes can be used by the marking script, ensure that all the necessary functions have been implemented. To check whether these implementations are correct, you **must** use the code snippet given in `__main__` to test your implementation. This code snippet provides an outline of how your implemented functions will interact to train a team of agents using WoLF-PHC. If you just modify the number of episodes and the hyperparameters for training, you can use this code to train a team of WoLF-PHC agents.
 
 Additionally, **ensure** that the initial Q-Values of all state-action pairs are initialized to **zero** prior to training. Although you can technically use any initialization value for Q-Learning, we require this as a means for unit testing your implementations.
 
@@ -47,7 +49,39 @@ To see how your implemented function interact with each other to train the agent
 
 ## Marking details
 ### Performance marking
-Using similar codes as what you've seen in `__main__`, we are going to run your agent on a randomly sampled environment and compare it's performance to our solution. Performance is measured by running an experiment using your implementation. We then divide the sequence of episodes into groups of consecutive episodes and average the reward of the agent on these groups.
+Using similar codes as what you've seen in `__main__`, we are going to run your agent on a randomly sampled environment and compare it's performance to our solution. Performance is then measured by running an experiment of 50000 episodes using your implementation. We then divide the sequence of episodes into groups of consecutive 1000 episodes and average the reward of the agent on these groups for evaluation. 
 
 ### Unit test marking
+#### Desired Outputs
 We compare the results of updates from `learn()`, `calculateAveragePolicyUpdate()`, and `calculatePolicyUpdate()` for unit testing.
+
+As an example, let's say that the agent is exposed to the following sequence of experience:
+```
+Timestep, State, Agent 1 Action, Agent 2 Action, Agent 1 Reward, Agent 2 Reward, Next State
+1, [[[1,1],[1,3]], [1,3] ,[2,3]], MOVE_UP, MOVE_RIGHT, -0.4, -0.4, [[[1,0],[2,3]], [2,3] ,[2,3]]
+2, [[[1,0],[2,3]], [2,3] ,[2,3]], MOVE_DOWN, MOVE_LEFT, 0.0, 0.0, [[[1,1],[1,3]], [1,3] ,[2,3]]
+3. [[[1,1],[1,3]], [1,3] ,[2,3]], NO_OP, KICK, 0.0, 0.0, ["GOAL", "GOAL"]
+```
+
+Then, the output of `learn()`, `calculateAveragePolicyUpdate()`, and `calculatePolicyUpdate()` should be :
+```
+Timestep, Agent 1 learn() output, Agent 2 learn() output, Agent 1 calculateAveragePolicyUpdate() output, Agent 2 calculateAveragePolicyUpdate() output, Agent 1 calculatePolicyUpdate() Output, Agent 2 calculatePolicyUpdate() Output
+1, Change in Q<[[[1,1],[1,3]], [1,3] ,[2,3]], MOVE_UP>, Change in Q<[[[1,1],[1,3]], [1,3] ,[2,3]], MOVE_RIGHT> 
+2, Change in Q<[[[1,0],[2,3]], [2,3] ,[2,3]], MOVE_DOWN>, Change in Q<[[[1,0],[2,3]], [2,3] ,[2,3]], MOVE_LEFT> 
+3, Change in Q<[[[1,1],[1,3]], [1,3] ,[2,3]], NO_OP>, Change in Q<[[[1,1],[1,3]], [1,3] ,[2,3]], KICK> 
+```
+
+```
+Timestep, Agent 1 calculateAveragePolicyUpdate() output, Agent 2 calculateAveragePolicyUpdate() output
+1, [p_avg('MOVE_UP'), p_avg('MOVE_DOWN'), p_avg('MOVE_LEFT'), p('MOVE_RIGHT'), p_avg('KICK'), p_avg('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 1, [p_avg('MOVE_UP'), p_avg('MOVE_DOWN'), p_avg('MOVE_LEFT'), p('MOVE_RIGHT'), p_avg('KICK'), p_avg('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 2
+2,[p_avg('MOVE_UP'), p_avg('MOVE_DOWN'), p_avg('MOVE_LEFT'), p('MOVE_RIGHT'), p_avg('KICK'), p_avg('NO_OP')] at [[[1,0],[2,3]], [2,3] ,[2,3]] for agent 1, [p_avg('MOVE_UP'), p_avg('MOVE_DOWN'), p_avg('MOVE_LEFT'), p('MOVE_RIGHT'), p_avg('KICK'), p_avg('NO_OP')] at [[[1,0],[2,3]], [2,3] ,[2,3]] for agent 2
+3,[p_avg('MOVE_UP'), p_avg('MOVE_DOWN'), p_avg('MOVE_LEFT'), p('MOVE_RIGHT'), p_avg('KICK'), p_avg('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 1, [p_avg('MOVE_UP'), p_avg('MOVE_DOWN'), p_avg('MOVE_LEFT'), p('MOVE_RIGHT'), p_avg('KICK'), p_avg('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 2
+```
+, and,
+```
+Timestep, Agent 1 calculatePolicyUpdate() output, Agent 2 calculatePolicyUpdate() output
+1, [p('MOVE_UP'), p('MOVE_DOWN'), p('MOVE_LEFT'), p('MOVE_RIGHT'), p_avg('KICK'), p_avg('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 1, [p('MOVE_UP'), p('MOVE_DOWN'), p('MOVE_LEFT'), p('MOVE_RIGHT'), p('KICK'), p('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 2
+2,[p('MOVE_UP'), p('MOVE_DOWN'), p('MOVE_LEFT'), p('MOVE_RIGHT'), p('KICK'), p('NO_OP')] at [[[1,0],[2,3]], [2,3] ,[2,3]] for agent 1, [p('MOVE_UP'), p('MOVE_DOWN'), p('MOVE_LEFT'), p('MOVE_RIGHT'), p('KICK'), p('NO_OP')] at [[[1,0],[2,3]], [2,3] ,[2,3]] for agent 2
+3,[p('MOVE_UP'), p('MOVE_DOWN'), p('MOVE_LEFT'), p('MOVE_RIGHT'), p('KICK'), p('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 1, [p('MOVE_UP'), p('MOVE_DOWN'), p('MOVE_LEFT'), p('MOVE_RIGHT'), p('KICK'), p('NO_OP')] at [[[1,1],[1,3]], [1,3] ,[2,3]] for agent 2
+```
+

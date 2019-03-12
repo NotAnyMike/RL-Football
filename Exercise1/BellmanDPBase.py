@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from MDP import MDP
 
 class BellmanDPSolver(object):
-	def __init__(self):
+	def __init__(self, discountRate):
 		self.MDP = MDP()
 		self._gamma = 0.99
 		self.initVs()

@@ -7,14 +7,12 @@ In this task, you are required to implement an attacking agent in the HFO domain
 In general, these are the different steps that needs to be done to implement an asynchronous Q-Learning agent:
 
 1. Create a global value network which will later be periodically copied to the separate threads. 
-2. Create separate threads, each equipped with a copy of the environment and a local value network. 
-3. Initialize the value of the local value networks using the same values as your global value network. 
-4. In each thread, run the Q-Learning algorithm based on your local value functions and calculate the updates using the gathered experiences.
-5. Periodically push the gradients from the local networks to the global network and update the global network parameters. 
-6. After each update to the global network, copy the parameters of the global network into the local network that provided the update.
+2. Create separate threads, each equipped with a copy of the environment. 
+3. In each thread, run the Q-Learning algorithm based on the value functions and calculate the updates using the gathered experiences.
+5. Periodically push the gradients from the threads to the global network and update the global network parameters.
 
 
-For this task, we will require you to store the parameters of your agent every 1 million global timesteps. We will test the performance of your trained agent based on these submitted parameters. The performance of the agent will be measured based on average time to goal in each episode. In the event where your agent unsuccessfully scores a goal in an episode, we define the time to goal at that episode as the maximum allowed number of timesteps for that episode, which is 500 timesteps.
+For this task, we will require you to store the parameters of your agent every **1 million global timesteps and the final parameters you get**. We will test the performance of your trained agent based on these submitted parameters. The performance of the agent will be measured based on average time to goal in each episode. In the event where your agent unsuccessfully scores a goal in an episode, we define the time to goal at that episode as the maximum allowed number of timesteps for that episode, which is 500 timesteps.
 
 ## Getting Started
 
@@ -83,6 +81,8 @@ You are allowed to define your own reward functions for this task. Make sure tha
 2. `Goalkeeper.py` (**Should not be modified**)
    - An NPC Goalkeeper implementation for the environment. This NPC just runs around the goalposts throughout the episodes.
 
+### Training your agents
+Train your agents for up to 32 million timesteps. In this case, divide this equally between the number of threads that you are using. As an example, if you use 8 threads, then each thread will be responsible for up to 4 million timesteps. In this case, this means that you need to run the agents for 8000 episodes since each episode spans up to 500 timesteps.
 
 ### Marking details
 #### Performance marking
@@ -145,7 +145,7 @@ targetValue = targetPrediction.item()
 
 During marking, using the same inputs, we will test the computed action values and the target values based on your implemented functions and see whether they are similar to our solution. This function should be agnostic to whatever state representation or model is used. 
 
-Unit testing will be done by running two short episodes of interaction in the HFO environment and checking at each timestep the correctness of the outputs of your function.
+Unit testing will be done by running two short episodes of interaction in the HFO environment and checking at each timestep the correctness of the outputs of your function. **The architecture used for testing will be similar to that which is used inside the DQN Algorithm.**
 
 #### Suggested timeline
 We understand that this exercise may seem daunting due to the many components that need to be implemented. However, it can be much easier if you go through the exercise following certain steps. In general, these are the steps that we recommend you to go through:
