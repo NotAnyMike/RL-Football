@@ -7,6 +7,8 @@ import sys
 
 import torch
 import torch.multiprocessing as mp
+from tensorboard_logger import Logger
+from datetime import datetime
 
 from Worker import train, computeTargets, computePrediction, saveModelNetwork
 from Networks import ValueNetwork
@@ -27,13 +29,15 @@ parser.add_argument('--log_interval', type=int, default=10, metavar='N',
 parser.add_argument('--num_processes', type=int, default=2, metavar='N',
                     help='how many training processes to use (default: 2)')
 parser.add_argument('--eval', type=bool, default=False, help='Whether or not this trial' \
-                        'is in evaluation mode. If it easy greed policy is always used')
+                        'is in evaluation mode. If it true greed policy is always used')
 
 # Use this script to handle arguments and 
 # initialize important components of your experiment.
 # These might include important parameters for your experiment,
 # your models, torch's multiprocessing methods, etc.
 if __name__ == "__main__" :     
+
+        logger = Logger("tb/" + str(timedate.now())) 
 
         args = parser.parse_args()
 
@@ -65,7 +69,7 @@ if __name__ == "__main__" :
 
                 seed = args.seed + idx
                 port = 6000 + 100*idx
-                trainingArgs = (idx, args, value_network, target_value_network, optimizer, lock, counter, port, seed, I_tar, I_async, name)
+                trainingArgs = (idx, args, value_network, target_value_network, optimizer, lock, counter, port, seed, I_tar, I_async, name, logger)
                 p = mp.Process(target=train, args=trainingArgs)
                 p.start()
                 processes.append(p)

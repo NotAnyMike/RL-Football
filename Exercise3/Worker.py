@@ -6,7 +6,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import numpy as np
-from tensorboard_logger import configure, log_value
+#from tensorboard_logger import configure, log_value
+from hfo import GOAL
 
 from Networks import ValueNetwork
 from torch.autograd import Variable
@@ -14,14 +15,14 @@ from Environment import HFOEnv
 import random
 
 def train(idx, args, value_network, target_value_network, optimizer, lock, counter, 
-                port, seed, I_tar, I_async, name=None):
+                port, seed, I_tar, I_async, name=None, logger=None):
 
         hfoEnv = HFOEnv(numTeammates=0, numOpponents=1, port=port, seed=seed)
         hfoEnv.connectToServer()
 
         if name == None:
                 name = str(time())
-        configure("tb/" + name, flush_secs=5)
+        #configure("tb/" + name, flush_secs=5)
 
         if args.eval:
                 num_episodes = (args.eval_episodes)
@@ -31,6 +32,10 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
 
         gamma = 0.99
         epsilon = 0.9
+        lr = 0.01 # TODO Currently not being used
+        windows = [10, 500]
+        goal_buffer = [0]*max(windows)
+
         for episodes in num_episodes:
 
                 loss_func = nn.MSELoss()
@@ -48,14 +53,12 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 while episodeNumber <= episodes:
                         #train_epoch(epoch, args, model, device, train_loader, optimizer)
                         
-                        if args.eval or np.random.random() <= epsilon:
+                        if args.eval or np.random.random() >= epsilon:
                                 qs = [computePrediction(state1,a,value_network) 
                                                 for a in hfoEnv.possibleActions]
                                 action = np.argmax(qs)
-                                print("runing greedy") 
                         else:
                                 action = random.randint(0,len(hfoEnv.possibleActions)-1)
-                                print("running random") 
 
                         a1 = hfoEnv.possibleActions[action]
 
@@ -64,13 +67,11 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         
                         #print(state2, reward, done, status, info)
 
-                        if done:
-                                learning_str = "eval" if args.eval else "learning"
-                                log_value('episode reward %s (idx %i)' % (learning_str,idx), episodeReward, episodeNumber)
-                                episodeNumber += 1
-                                episodeReward = 0.0
-                                episodeSteps  = 0
-                                hfoEnv.reset()
+                        if status == GOAL:
+                                goal_buffer.append(1)
+                        else:
+                                goal_buffer.append(0)
+
 
                         y = computeTargets(reward, state2, gamma, done, target_value_network)
 
@@ -83,6 +84,18 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         episodeSteps += 1
                         with lock:
                                 counter.value += counter.value + 1
+
+                        if done:
+                                learning_str = "eval-" if args.eval else ""
+                                logger.log_value(learning_str + 'episode/reward', episodeReward, counter.value)
+                                for window in windows:
+                                        logger.log_value(learning_str + "goals/%i" % window,
+                                                        sum(goal_buffer[-window:]),
+                                                        counter.value)
+                                episodeNumber += 1
+                                episodeReward = 0.0
+                                episodeSteps  = 0
+                                state1 = hfoEnv.reset()
 
                         if args.eval == False:
                                 # TODO this will get some errors in the parallel implementation
