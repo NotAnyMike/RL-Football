@@ -37,8 +37,11 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
         max_epsilon = 0.99
         min_epsilon = 0.1
         total = 200
-
         epsilon_fn = lambda current : max_epsilon - current*(max_epsilon - min_epsilon)/total if current < total else min_epsilon
+
+        max_lr = 0.9
+        min_lr = 0.01
+        lr_fn = lambda current: max_lr - current*(max_lr - min_lr)/total if current < total else min_lr
 
         for episodes in num_episodes:
 
@@ -57,6 +60,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 while episodeNumber <= episodes:
                         #train_epoch(epoch, args, model, device, train_loader, optimizer)
                         epsilon = epsilon_fn(episodeNumber)
+                        lr = lr_fn(episodeNumber)
 
                         if args.eval or np.random.random() >= epsilon:
                                 qs = [computePrediction(state1,a,value_network) 
@@ -96,6 +100,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                                 logger.log_value('episode/' + learning_str + 'reward',
                                         episodeReward, episodeNumber)
                                 logger.log_value('hyperparameters/epsilon', epsilon, episodeNumber)
+                                logger.log_value('hyperparameters/lr', lr, episodeNumber)
                                 for window in windows:
                                         logger.log_value(learning_str + "goals/%i" % window,
                                                         np.sum(goal_buffer[-window:]),
@@ -120,7 +125,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                                                         shared_param._grad = param.grad
                                                         #value_network._grad = target_value_network.grad
                                                 # Take a step
-                                                optimizer.step()
+                                                optimizer.step(lr=lr)
                                                 # Clean gradients
                                                 optimizer.zero_grad()
                                         target_value_network.zero_grad()
