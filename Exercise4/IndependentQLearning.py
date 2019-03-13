@@ -7,7 +7,12 @@ from tensorboard_logger import configure, log_value
 from DiscreteMARLUtils.Environment import DiscreteMARLEnvironment
 from DiscreteMARLUtils.Agent import Agent
 from copy import deepcopy
+from time import time
+import numpy as np
+from pdb import set_trace
+from hfo import GOAL
 import argparse
+from datetime import datetime
                 
 class IndependentQLearningAgent(Agent):
         def __init__(self, learningRate, discountFactor, epsilon, initVals=0.0):
@@ -23,7 +28,7 @@ class IndependentQLearningAgent(Agent):
 
                 self._LR = learningRate # Constant value
                 self._EPSILON = epsilon
-                self._min_epsilon = 0.01
+                self._min_epsilon = 0.1
                 self._min_lr = 0.01
 
                 self._s1 = None
@@ -41,7 +46,7 @@ class IndependentQLearningAgent(Agent):
 
         def Q(self, state):
                 if tuple(state) not in self._Q.keys():
-                    self._Q[tuple(state)] = np.zeros(5)
+                    self._Q[tuple(state)] = np.zeros(len(self.possibleActions))
 
                 return self._Q[tuple(state)]
         
@@ -65,6 +70,8 @@ class IndependentQLearningAgent(Agent):
                 return a
 
         def toStateRepresentation(self, state):
+                if type(state[0]) == list:
+                    state = [self.toStateRepresentation(x) for x in state]
                 return tuple(state)
 
         def setState(self, state):
@@ -82,13 +89,13 @@ class IndependentQLearningAgent(Agent):
 
                 delay = 0
                 if episodeNumber > delay:
-                    epsilon = self._EPSILON - self._EPSILON / 400 * (episodeNumber-delay)
+                    epsilon = self._EPSILON - self._EPSILON / 10000 * (episodeNumber-delay)
                 else: 
                     epsilon = self._EPSILON
 
                 delay = 100
                 if episodeNumber > delay:
-                    lr = self._LR - self._LR / 300 * (episodeNumber-delay)
+                    lr = self._LR - self._LR / 10000 * (episodeNumber-delay)
                 else: 
                     lr = self._LR
 
@@ -102,6 +109,7 @@ if __name__ == '__main__':
         parser.add_argument('--numOpponents', type=int, default=1)
         parser.add_argument('--numAgents', type=int, default=2)
         parser.add_argument('--numEpisodes', type=int, default=50000)
+        parser.add_argument('--visualize', type=bool, default=False)
 
         args=parser.parse_args()
 
@@ -111,13 +119,14 @@ if __name__ == '__main__':
                 rewards_buffer = []
                 history = [10,500]
                 goals = [0]*max(history)
-                configure("tb/IQL" + str(time()))
+                configure("tb/IQL" + str(datetime.now()))
         #####################################################
 
-        MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, numAgents = args.numAgents)
+        MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, numAgents = args.numAgents,
+                visualize=args.visualize)
         agents = []
         for i in range(args.numAgents):
-                agent = IndependentQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 1.0)
+                agent = IndependentQLearningAgent(learningRate = 0.99, discountFactor = 0.9, epsilon = 1.0)
                 agents.append(agent)
 
         numEpisodes = args.numEpisodes
@@ -134,7 +143,8 @@ if __name__ == '__main__':
                                 agent.setEpsilon(epsilon)
                                 agent.setLearningRate(learningRate)
                         actions = []
-                        stateCopies = []
+                        #stateCopies = []
+                        stateCopies, nextStateCopies = [], []
                         for agentIdx in range(args.numAgents):
                                 obsCopy = deepcopy(observation[agentIdx])
                                 stateCopies.append(obsCopy)
@@ -142,6 +152,8 @@ if __name__ == '__main__':
                                 actions.append(agents[agentIdx].act())
                         numTakenActions += 1
                         nextObservation, reward, done, status = MARLEnv.step(actions)
+
+                        if args.visualize: MARLEnv.visualizeState(reward)
 
                         for agentIdx in range(args.numAgents):
                                 agents[agentIdx].setExperience(agent.toStateRepresentation(stateCopies[agentIdx]), actions[agentIdx], reward[agentIdx], 
@@ -151,14 +163,14 @@ if __name__ == '__main__':
                         observation = nextObservation
                         
                         ############# with debugging purposes ############
-                        if done and debug:
-                                if status == GOAL:
+                        if done[0] and debug:
+                                if status[0] == "GOAL":
                                     goals.append(1)
                                 else:
                                     goals.append(0)
 
-                                rewards_buffer.append(cumulative_rewards)
-                                log_value("episode/rewards", cumulative_rewards, episode)
+                                #rewards_buffer.append(cumulative_rewards)
+                                #log_value("episode/rewards", cumulative_rewards, episode)
                                 for h in history:
                                     log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
                                 log_value("training/lr", learningRate, episode)
