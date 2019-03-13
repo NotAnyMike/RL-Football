@@ -1,6 +1,6 @@
 import random
 import copy
-import pygame
+#import pygame # Uncomment in case of visualization
 
 class DiscreteMARLEnvironment(object):
 	def __init__(self, numOpponents=0, numAgents=0, collisionPenalty = 0.4, visualize=False):
