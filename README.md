@@ -120,3 +120,14 @@ With learning
 | Defense Captured | xxx |
 | Balls out of Bounds | xxx |
 | Out of time | xxx |
+
+# Multi-agent Reinforcement Learning
+
+## Independent Q-Learning (IQL)
+
+In this case there are two agents, the only way to score is if one player marks the enemy (there is only one defensing player) while the other shoots. for IQL the agents are not allowed to comunicate but still have to learn to act together.
+
+
+The results are similar to those of QL. The agents manage to score around 410 goals out of 500 trials after 20k episodes. Here are the results varying the epsilon and lr scheduler.
+
+![IQL](Exercise4/images/IQL.png)
