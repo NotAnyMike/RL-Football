@@ -118,8 +118,6 @@ class QLearningAgent(Agent):
 
 if __name__ == '__main__':
 
-        configure("tb/qlearning" + str(time()), flush_secs=5)
-
         parser = argparse.ArgumentParser()
         parser.add_argument('--id', type=int, default=0)
         parser.add_argument('--numOpponents', type=int, default=0)
@@ -141,6 +139,7 @@ if __name__ == '__main__':
         episode_length = []
         history = [10,500]
         goals = [0]*max(history)
+        configure("tb/qlearning" + str(time()), flush_secs=5)
 
         # Run training using Q-Learning
         numTakenActions = 0 
