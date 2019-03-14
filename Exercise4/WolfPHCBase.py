@@ -6,6 +6,8 @@ import argparse
 from DiscreteMARLUtils.Environment import DiscreteMARLEnvironment
 from DiscreteMARLUtils.Agent import Agent
 from copy import deepcopy
+from datetime import datetime
+from tensorboard_logger import configuer, log_value
 import numpy as np
 		
 class WolfPHCAgent(Agent):
@@ -41,14 +43,23 @@ class WolfPHCAgent(Agent):
 		return TD_delta*self._lr # Return the delta in Q
 
 	def avg_pi(self, s):
-		key = self._tuple(s) not in self._avg_pi.keys():
+		key = self._tuple(s) 
+		if key not in self._avg_pi.keys():
 			self._avg_pi[key] = [1/len(self.possibleActions)]*len(self.possibleActions)
 		return self._avg_pi[key]
 
 	def pi(self, s):
-		key = self._tuple(s) not in self._pi.keys():
+		key = self._tuple(s) 
+		if key not in self._pi.keys():
 			self._pi[key] = [1/len(self.possibleActions)]*len(self.possibleActions)
 		return self._pi[key]
+
+	def Q(self,s,a):
+		key = self._tuple([s,a])
+		if key not in self._Q.keys():
+			self._Q[key] = 0.0
+			return 0.0
+		return self._Q[key]
 
 	def act(self):
 		return self.possibleActions[np.argmax(self.pi(self._s1))]
@@ -62,8 +73,32 @@ class WolfPHCAgent(Agent):
 		return self.avg_pi(k)# The avg policy in current state
 
 	def calculatePolicyUpdate(self):
+		# Find the suboptimal actions
+		Q_max = max([self.Q(self._s1,a) for a in self.possibleActions])
+		actions_sub = [a for a in self.possibleActions if self.Q(self._s1,a) == Q_max]
 
-		return # The policy for the current state
+		# Decide which lr to use
+		qs = [self.Q(self._s1,a) for a in self.possibleActions]
+		sum_avg  = np.dot(self.avg_pi(self._s1),qs) 
+		sum_norm = np.dot(self.pi(self._s1),qs)
+		delta = winDelta if sum_norm >= sum_avg else loseDelta
+
+		# Update probability of suboptimal actions
+		p_moved = 0.0
+		for i,a in enumerate(self.possibleActions):
+			pi = self.pi(self._s1)
+			if a in actions_sub:
+				p_moved = p_moved + min([delta/len(actions_sub), pi[i]])
+				self._pi[self._tuple(self._s1)][i] = pi[i] - min([delta/len(actions_sub), pi[i]])
+
+			# Update prob of optimal actions
+		for i,a in enumerate(self.possibleActions):
+			pi = self.pi(self._s1)
+			if a not in actions_sub:
+				self._pi[self._tuple(self._s1)[i] = pi[i] + p_moved/\
+						(len(self.possibleActions) - len(actions_sub))
+
+		return self.pi(self._s1) # The policy for the current state
 
 	def _tuple(self, args):
 		if type(args) == list or type(args) == tuple:
@@ -78,7 +113,7 @@ class WolfPHCAgent(Agent):
 		return self._tuple(state)
 
 	def setState(self, state):
-		raise NotImplementedError
+		setf._s1 = state
 
 	def setLearningRate(self,lr):
 		self._lr = lr
@@ -90,7 +125,8 @@ class WolfPHCAgent(Agent):
 		self._loseDelta = loseDelta
 	
 	def computeHyperparameters(self, numTakenActions, episodeNumber):
-		raise NotImplementedError
+		# TODO something to do here
+		return self._loseDelta, self._winDelta, self._lr
 
 if __name__ == '__main__':
 
@@ -100,6 +136,15 @@ if __name__ == '__main__':
 	parser.add_argument('--numEpisodes', type=int, default=100000)
 
 	args=parser.parse_args()
+
+	########### with debugging purposes only ############
+	debug = True
+	if debug:
+		rewards_buffer = []
+		history = [10,500]
+		goals = [0]*max(history)
+		configure("tb/WOLF" + str(datetime.now()))
+	#####################################################
 
 	numOpponents = args.numOpponents
 	numAgents = args.numAgents
@@ -144,3 +189,20 @@ if __name__ == '__main__':
 				agentIdx += 1
 			
 			observation = nextObservation
+
+			############# with debugging purposes ############
+			if args.visualize: MARLEnv.visualizeState(reward)
+
+			if done[0] and debug:
+				if status[0] == "GOAL":
+					goals.append(1)
+				else:
+					goals.append(0)
+
+				#rewards_buffer.append(cumulative_rewards)
+				#log_value("episode/rewards", cumulative_rewards, episode)
+				for h in history:
+					log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+				log_value("training/lr", learningRate, episode)
+				log_value("training/epsilon", epsilon, episode)
+			##################################################

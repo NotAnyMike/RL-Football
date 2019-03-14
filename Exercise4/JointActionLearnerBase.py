@@ -166,7 +166,7 @@ if __name__ == '__main__':
 		rewards_buffer = []
 		history = [10,500]
 		goals = [0]*max(history)
-		configure("tb/IQL" + str(datetime.now()))
+		configure("tb/JAL" + str(datetime.now()))
 	#####################################################
 
 	MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, 
