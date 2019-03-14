@@ -131,3 +131,10 @@ In this case there are two agents, the only way to score is if one player marks 
 The results are similar to those of QL. The agents manage to score around 410 goals out of 500 trials after 20k episodes. Here are the results varying the epsilon and lr scheduler.
 
 ![IQL](Exercise4/images/IQL.png)
+
+## Joint Action Learning (JAL)
+
+The resutls are similar and there is not need to do several testing for this algorithm.
+
+![IQL](Exercise4/images/JAL.png)
+

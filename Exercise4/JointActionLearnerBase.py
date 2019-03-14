@@ -87,11 +87,11 @@ class JointQLearningAgent(Agent):
 
 		# Updating C
 		self._C[self._tuple([self._s1,self._a2])] = self.C(self._s1,self._a2)+1
-		print("this value should be increasing",self._C[self._tuple([self._s1,self._a2])])
+		#print("this value should be increasing",self._C[self._tuple([self._s1,self._a2])])
 
 		# Updating N
 		self._N[self._tuple(self._s1)] = self.N(self._s1)+1
-		print("This value should also increase", self._N[self._tuple(self._s1)])
+		#rint("This value should also increase", self._N[self._tuple(self._s1)])
 
 		return TD_delta
 
@@ -175,7 +175,7 @@ if __name__ == '__main__':
 	numAgents = args.numAgents
 	numEpisodes = args.numEpisodes
 	for i in range(numAgents):
-		agent = JointQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 1.0, numTeammates=args.numAgents-1)
+		agent = JointQLearningAgent(learningRate = 0.9, discountFactor = 0.9, epsilon = 1.0, numTeammates=args.numAgents-1)
 		agents.append(agent)
 
 	numEpisodes = numEpisodes
