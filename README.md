@@ -138,3 +138,8 @@ The resutls are similar and there is not need to do several testing for this alg
 
 ![IQL](Exercise4/images/JAL.png)
 
+## Wolf-PHC
+
+In the case for Wolf-PHC, the current version implement has the best performance compared to the other two algorithms. It manges to get around 450 goals of 500 episodes.
+
+![wolf](Exercise4/images/wolf.png)
