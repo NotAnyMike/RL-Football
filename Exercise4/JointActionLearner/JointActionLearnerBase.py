@@ -87,13 +87,13 @@ class JointQLearningAgent(Agent):
 
 		# Updating C
 		self._C[self._tuple([self._s1,self._a2])] = self.C(self._s1,self._a2)+1
-		print("this value should be increasing",self._C[self._tuple([self._s1,self._a2])])
+		#print("this value should be increasing",self._C[self._tuple([self._s1,self._a2])])
 
 		# Updating N
 		self._N[self._tuple(self._s1)] = self.N(self._s1)+1
-		print("This value should also increase", self._N[self._tuple(self._s1)])
+		#rint("This value should also increase", self._N[self._tuple(self._s1)])
 
-		return TD_delta
+		return TD_delta*self._lr
 
 	def act(self):
 		'''
@@ -135,13 +135,13 @@ class JointQLearningAgent(Agent):
 
 		delay = 0
 		if episodeNumber > delay:
-			epsilon = self._EPSILON - self._EPSILON / 10000 * (episodeNumber-delay)
+			epsilon = self._EPSILON - self._EPSILON / 15000 * (episodeNumber-delay)
 		else: 
 			epsilon = self._EPSILON
 
-		delay = 100
+		delay = 0
 		if episodeNumber > delay:
-			lr = self._LR - self._LR / 10000 * (episodeNumber-delay)
+			lr = self._LR - self._LR / 15000 * (episodeNumber-delay)
 		else: 
 			lr = self._LR
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
 		rewards_buffer = []
 		history = [10,500]
 		goals = [0]*max(history)
-		configure("tb/IQL" + str(datetime.now()))
+		configure("tb/JAL" + str(datetime.now()))
 	#####################################################
 
 	MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, 
@@ -175,7 +175,7 @@ if __name__ == '__main__':
 	numAgents = args.numAgents
 	numEpisodes = args.numEpisodes
 	for i in range(numAgents):
-		agent = JointQLearningAgent(learningRate = 0.1, discountFactor = 0.9, epsilon = 1.0, numTeammates=args.numAgents-1)
+		agent = JointQLearningAgent(learningRate = 0.9, discountFactor = 0.9, epsilon = 1.0, numTeammates=args.numAgents-1)
 		agents.append(agent)
 
 	numEpisodes = numEpisodes

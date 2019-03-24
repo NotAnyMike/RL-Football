@@ -167,20 +167,20 @@ class WolfPHCAgent(Agent):
                 else: 
                     epsilon = self._max_epsilon
 
-                delay = 100
+                delay = 0
                 #pices = 5000
                 if episodeNumber > delay:
                     lr = self._max_lr - self._max_lr / pices * (episodeNumber-delay)
                 else: 
                     lr = self._max_lr
 
-                delay = 100
+                delay = 0
                 if episodeNumber > delay:
                     winDelta = self._max_winDelta - self._max_winDelta / pices * (episodeNumber-delay)
                 else: 
                     winDelta = self._max_winDelta
 
-                delay = 100
+                delay = 0
                 if episodeNumber > delay:
                     loseDelta = self._max_loseDelta - self._max_loseDelta / pices * (episodeNumber-delay)
                 else: 

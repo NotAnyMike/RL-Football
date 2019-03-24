@@ -93,7 +93,7 @@ class JointQLearningAgent(Agent):
 		self._N[self._tuple(self._s1)] = self.N(self._s1)+1
 		#rint("This value should also increase", self._N[self._tuple(self._s1)])
 
-		return TD_delta
+		return TD_delta*self._lr
 
 	def act(self):
 		'''
@@ -135,13 +135,13 @@ class JointQLearningAgent(Agent):
 
 		delay = 0
 		if episodeNumber > delay:
-			epsilon = self._EPSILON - self._EPSILON / 10000 * (episodeNumber-delay)
+			epsilon = self._EPSILON - self._EPSILON / 15000 * (episodeNumber-delay)
 		else: 
 			epsilon = self._EPSILON
 
-		delay = 100
+		delay = 0
 		if episodeNumber > delay:
-			lr = self._LR - self._LR / 10000 * (episodeNumber-delay)
+			lr = self._LR - self._LR / 15000 * (episodeNumber-delay)
 		else: 
 			lr = self._LR
 

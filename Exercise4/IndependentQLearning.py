@@ -56,7 +56,7 @@ class IndependentQLearningAgent(Agent):
                 TD_target = (self._r + self._gamma * Q_max)
                 TD_delta = (TD_target - Q) 
                 self._Q[tuple(self._s1)][self.possibleActions.index(self._a)] = Q + self._lr * TD_delta
-                return TD_delta
+                return TD_delta*self._lr
 
         def act(self):
                 '''
