@@ -16,8 +16,8 @@ from SharedAdam import SharedAdam
 
 # Training settings
 parser = argparse.ArgumentParser(description='PyTorch Asynchronous 1-step Q-learning')
-parser.add_argument('--eval_episodes', type=int, default=500, metavar='n',
-                    help='number of epochs to evaluate (default: 500)')
+parser.add_argument('--eval_episodes', type=int, default=0, metavar='n',
+                    help='number of epochs to evaluate, will always use greedy policy (default: 500)')
 parser.add_argument('--episodes', type=int, default=500, metavar='n',
                     help='number of epochs to train (default: 500)')
 parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
@@ -35,7 +35,6 @@ parser.add_argument('--eval', type=bool, default=False, help='Whether or not thi
 # initialize important components of your experiment.
 # These might include important parameters for your experiment, and initialization of
 # your models, torch's multiprocessing methods, etc.
-<<<<<<< HEAD
 if __name__ == "__main__" :     
 
 	# Example on how to initialize global locks for processes
@@ -92,8 +91,7 @@ if __name__ == "__main__" :
         for p in processes:
                 p.join()
 
-        saveModelNetwork(value_network, "trained_models/"+ name)
-	
+        #saveModelNetwork(value_network, "trained_models/"+ name)
 
         print("##################################################")
         print("###################### done ######################")

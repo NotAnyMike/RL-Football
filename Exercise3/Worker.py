@@ -40,7 +40,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
         epsilon_fn = lambda current : max_epsilon - current*(max_epsilon - min_epsilon)/total if current < total else min_epsilon
 
         max_lr = 0.9
-        min_lr = 0.01
+        min_lr = 0.1
         lr_fn = lambda current: max_lr - current*(max_lr - min_lr)/total if current < total else min_lr
 
         for episodes in num_episodes:
@@ -58,14 +58,18 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         print("##################################################")
 
                 while episodeNumber <= episodes:
+
+                        if t % 1e6 == 0:
+                            saveModelNetwork(value_network,"trained_models/params"+str(int(t // 1e6)))
+
+
                         #train_epoch(epoch, args, model, device, train_loader, optimizer)
                         epsilon = epsilon_fn(episodeNumber)
                         lr = lr_fn(episodeNumber)
 
                         if args.eval or np.random.random() >= epsilon:
-                                qs = [computePrediction(state1,a,value_network) 
-                                                for a in hfoEnv.possibleActions]
-                                action = np.argmax(qs)
+                                qs = value_network(state1)
+                                action = torch.argmax(qs)
                         else:
                                 action = random.randint(0,len(hfoEnv.possibleActions)-1)
 
@@ -76,11 +80,16 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                         
                         #print(state2, reward, done, status, info)
 
-
                         y = computeTargets(reward, state2, gamma, done, target_value_network)
 
-                        prediction = computePrediction(state1,a1,value_network)
-                        loss = loss_func(prediction, y)
+                        prediction = computePrediction(state1,action,value_network)
+
+                        Y = torch.zeros(4)
+                        Y[action] = y
+                        Prediction = torch.zeros(4)
+                        Prediction[action] = prediction
+
+                        loss = loss_func(Y,Prediction)
                         loss.backward()
 
                         state1 = state2
@@ -140,6 +149,7 @@ def train(idx, args, value_network, target_value_network, optimizer, lock, count
                 if args.eval == False:
                         args.eval = True
 
+        saveModelNetwork(value_network,"trained_models/params_last")
         # Finishing training and showing stats
         hfoEnv.quitGame()
 
@@ -150,28 +160,22 @@ def computeTargets(reward, nextObservation, discountFactor, done, targetNetwork)
         if done:
                 y = torch.Tensor([reward]).to(device)
         else:
-                qs = [computePrediction(nextObservation,a,targetNetwork) for a in range(4)]
-                q_max = np.max(qs)
+                qs = targetNetwork(nextObservation).data
+                q_max = torch.max(qs)
                 y = torch.Tensor([reward]).to(device) + discountFactor*q_max
         return y.detach()
 
 def computePrediction(state, action, valueNetwork, possible_actions=None):
-        '''
-        action should be a string
-        '''
-        if possible_actions == None:
-                # to allow changing to different action space
-                possible_actions = ['MOVE','SHOOT','DRIBBLE','GO_TO_BALL']
-        if type(action) == str: 
-                action = possible_actions.index(action)
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        actions = [0]*len(possible_actions)
-        actions[action] = 1
+        if len(state.shape) == 2 and state.shape[0] == 1:
+            state = state[0]
+        state = torch.Tensor(state)
 
-        inputs = np.concatenate([state,actions])
-        inputs = torch.from_numpy(inputs)
+        prediction = valueNetwork(state)#.to(device))
+        prediction = prediction[action]
 
-        return valueNetwork(inputs.to('cuda'))
+        return prediction
         
 # Function to save parameters of a neural network in pytorch.
 def saveModelNetwork(model, strDirectory):

@@ -100,9 +100,9 @@ class HFOEnv(object):
                 if status == 1:
                         reward += 50.0
                 elif status == 0:
-                        reward -= 0.0#0.1
+                        reward -= 0.1
                 elif status > 1:
-                        reward -= 0.0#10.0
+                        reward -= 10.0
 
                 return reward, info
 
