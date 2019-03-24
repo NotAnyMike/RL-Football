@@ -45,7 +45,7 @@ class SARSAAgent(Agent):
                 TD_delta  = TD_target - q1
                 
                 self._Q[tuple(self._s1)][self.possibleActions.index(self._a)] = q1 + self._lr * TD_delta
-                return TD_delta
+                return TD_delta*self._lr
 
         def act(self):
                 '''

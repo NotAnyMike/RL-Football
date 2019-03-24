@@ -29,14 +29,13 @@ class MonteCarloAgent(Agent):
 
         def learn(self):
                 G = 0
-                q_encountered = []
+                self._q_encountered = []
                 for i,(s,a,r) in enumerate(self._episodes):
                         G = self._gamma*G + r
                         if tuple([s,a]) not in self._episodes[:i]: # TODO not working
                                 self._add_G(s,a,G) 
                                 q_sa = np.mean(self._returns[tuple([s,a])])
                                 self._Q[tuple([s,a])] = q_sa
-                                q_encountered.append(q_sa)
 
                                 opt_act = self._best_act(s)
 
@@ -48,8 +47,10 @@ class MonteCarloAgent(Agent):
                                         else:
                                                 pi.append(self._epsilon/n)
                                 self._pi[tuple([s,a])] = tuple(pi)
+                                
+                                self._q_encountered.append(q_sa)
 
-                return self._Q, q_encountered
+                return self._Q, self._q_encountered
 
         def _best_act(self, state):
                 max_val = None # To allow negative values
@@ -85,6 +86,7 @@ class MonteCarloAgent(Agent):
                 self._s1 = state
 
         def reset(self):
+                self._q_encountered = []
                 self._episodes = []
 
         def act(self):

@@ -47,7 +47,7 @@ class QLearningAgent(Agent):
                 TD_target = (self._r + self._gamma * Q_max)
                 TD_delta = (TD_target - Q) 
                 self._Q[tuple(self._s1)][self.possibleActions.index(self._a)] = Q + self._lr * TD_delta
-                return TD_delta
+                return TD_delta*self._lr
 
         def act(self):
                 '''
@@ -93,11 +93,6 @@ class QLearningAgent(Agent):
         def computeHyperparameters(self, numTakenActions, episodeNumber):
                 self._episode = episodeNumber
                 self._steps = numTakenActions
-
-                # 1/x**2 decay
-                #lr = self._LR / ((episodeNumber+1) ** (1/2) )
-                #epsilon = (self._EPSILON - self._min_epsilon ) / ((episodeNumber+1) ** (1/2)) \
-                #        + self._min_epsilon
 
                 delay = 0
                 if episodeNumber > delay:
