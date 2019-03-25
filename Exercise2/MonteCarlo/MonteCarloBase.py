@@ -25,16 +25,21 @@ class MonteCarloAgent(Agent):
                 self._Q  = {}
                 self._pi = {} # a dict of dicts
                 self._returns = {}
-                self._episodes = []
+
+                self._S1 = []
+                self._A  = []
+                self._R  = []
+                self._D  = []
+                self._S2 = []
 
         def learn(self):
                 G = 0
                 self._q_encountered = []
-                visited_pairs = []
-                for i,(s,a,r) in enumerate(self._episodes):
+                episode = list(zip(self._S1,self._A,self._R))
+                pairs   = list(zip(self._S1,self._A))
+                for i,(s,a,r) in reversed(list(enumerate(episode))):
                         G = self._gamma*G + r
-                        if tuple([s,a]) not in visited_pairs #self._episodes[:i]: # TODO not working
-                                visited_pairs.append(tuple([s,a]))
+                        if tuple([s,a]) not in pairs[:i]: # TODO be careful here
                                 self._add_G(s,a,G) 
                                 q_sa = np.mean(self._returns[tuple([s,a])])
                                 self._Q[tuple([s,a])] = q_sa
@@ -50,7 +55,8 @@ class MonteCarloAgent(Agent):
                                                 pi.append(self._epsilon/n)
                                 self._pi[tuple([s,a])] = tuple(pi)
                                 
-                                self._q_encountered.append(q_sa)
+                                #self._q_encountered.append(q_sa)
+                                self._q_encountered.insert(0,q_sa)
 
                 return self._Q, self._q_encountered
 
@@ -82,14 +88,22 @@ class MonteCarloAgent(Agent):
                 return tuple(state)
 
         def setExperience(self, state, action, reward, status, nextState):
-                self._episodes.append(tuple([state,action,reward]))
+                self._S1.append(tuple(state))
+                self._A.append(action)
+                self._R.append(reward)
+                self._D.append(status)
+                self._S2.append(tuple(nextState))
 
         def setState(self, state):
                 self._s1 = state
 
         def reset(self):
                 self._q_encountered = []
-                self._episodes = []
+                self._S1 = []
+                self._A  = []
+                self._R  = []
+                self._D  = []
+                self._S2 = []
 
         def act(self):
                 '''
