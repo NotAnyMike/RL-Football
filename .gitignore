@@ -4,10 +4,19 @@ __pycache__/
 *.swp
 *.swo
 *.swn
+*.csv
+.ipynb_checkpoints/
 
 Exercise2/SARSAAgent.sh
 Exercise2/SARSABase.py
 Exercise2/MonteCarlo.sh
 Exercise2/MonteCarloBase.py
+Exercise2/*.py
+
+Exercise3/SampleNetworks.py
+Exercise3/ExampleNetwork
+Exercise3/UnitTestExample.py
+
+Exercise4/*.py
 
 tb/

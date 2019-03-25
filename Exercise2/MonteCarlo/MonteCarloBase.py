@@ -30,9 +30,11 @@ class MonteCarloAgent(Agent):
         def learn(self):
                 G = 0
                 self._q_encountered = []
+                visited_pairs = []
                 for i,(s,a,r) in enumerate(self._episodes):
                         G = self._gamma*G + r
-                        if tuple([s,a]) not in self._episodes[:i]: # TODO not working
+                        if tuple([s,a]) not in visited_pairs #self._episodes[:i]: # TODO not working
+                                visited_pairs.append(tuple([s,a]))
                                 self._add_G(s,a,G) 
                                 q_sa = np.mean(self._returns[tuple([s,a])])
                                 self._Q[tuple([s,a])] = q_sa
