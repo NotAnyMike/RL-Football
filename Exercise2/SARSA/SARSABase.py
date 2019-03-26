@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # encoding utf-8
+
 import itertools
 import argparse
 from time import time
@@ -35,23 +36,25 @@ class SARSAAgent(Agent):
 
         def learn(self):
 
-                q1_vals = self.Q(self._s1)
-                q1 = q1_vals[self.possibleActions.index(self._a)]
+                q1_vals = self.Q(self._s0)
+                q1 = q1_vals[self.possibleActions.index(self._a0)]
                 
-                q2_vals = self.Q(self._s2)
-                a2 = self.policy(q2_vals)
-                TD_target = self._r + self._gamma * q2_vals[self.possibleActions.index(a2)]
+                q2_vals = self.Q(self._s1)
+                #a2 = self.policy(q2_vals)
+                a2 = self._a
+                q2 = q2_vals[self.possibleActions.index(a2)] if a2 is not None else 0
+                TD_target = self._r0 + self._gamma * q2
 
                 TD_delta  = TD_target - q1
                 
-                self._Q[tuple(self._s1)][self.possibleActions.index(self._a)] = q1 + self._lr * TD_delta
+                self._Q[tuple(self._s0)][self.possibleActions.index(self._a0)] = q1 + self._lr * TD_delta
                 return TD_delta*self._lr
 
         def act(self):
                 '''
                 Choose action based on policy
                 '''
-                q = self.Q(self._s1)
+                q = self.Q(self._state)
                 return self.policy(q)
 
         def policy(self, q_values):
@@ -63,9 +66,13 @@ class SARSAAgent(Agent):
 
 
         def setState(self, state):
-                self._s1 = state
+                self._state = state
 
         def setExperience(self, state, action, reward, status, nextState):
+                self._s0 = self._s1
+                self._a0 = self._a
+                self._r0 = self._r
+
                 self._s1 = state
                 self._a  = action
                 self._r  = reward
@@ -77,17 +84,17 @@ class SARSAAgent(Agent):
                 self._episode = episodeNumber
                 self._steps = numTakenActions
 
-                # 1/x**2 decay
-                #lr = self._LR / ((episodeNumber+1) ** (1/2) )
-                #epsilon = (self._EPSILON - self._min_epsilon ) / ((episodeNumber+1) ** (1/2)) \
-                #        + self._min_epsilon
-
-                if episodeNumber > 100:
-                    episodeNumber -= 100
-                    epsilon = self._EPSILON - self._EPSILON / 200 * episodeNumber
-                    lr = self._LR - self._LR / 400 * episodeNumber
+                delay = 100
+                if episodeNumber > delay:
+                    epsilon = self._EPSILON - self._EPSILON / 200 * (episodeNumber - delay)
                 else: 
                     epsilon = self._EPSILON
+
+                # a good pair is 500, 500
+                delay = 100#500
+                if episodeNumber > delay:
+                    lr = self._LR - self._LR / 400 * (episodeNumber - delay)
+                else: 
                     lr = self._LR
 
                 lr = lr if lr >= self._min_lr else self._min_lr
@@ -99,6 +106,9 @@ class SARSAAgent(Agent):
                 return tuple(state)
 
         def reset(self):
+                self._s0 = None
+                self._r0 = None
+
                 self._s1 = None
                 self._a  = None
                 self._r  = None
@@ -146,6 +156,7 @@ if __name__ == '__main__':
                 observation = hfoEnv.reset()
                 nextObservation = None
                 cumulative_rewards = 0
+                epsStart = True
 
                 for t in itertools.count():
                         learningRate, epsilon = agent.computeHyperparameters(numTakenActions, episode)
@@ -159,8 +170,13 @@ if __name__ == '__main__':
 
                         nextObservation, reward, done, status = hfoEnv.step(action)
                         agent.setExperience(agent.toStateRepresentation(obsCopy), action, reward, status, agent.toStateRepresentation(nextObservation))
+
+                        if not epsStart :
+                                agent.learn()
+                        else:
+                                epsStart = False
                         
-                        update = agent.learn()
+                        #update = agent.learn()
 
                         cumulative_rewards += reward
                         observation = nextObservation
@@ -179,11 +195,13 @@ if __name__ == '__main__':
                                     log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
                                 log_value("training/lr", learningRate, episode)
                                 log_value("training/epsilon", epsilon, episode)
-                                break
+
+                        if status != 0:
+                            break
                         
 
-                #agent.setExperience(agent.toStateRepresentation(nextObservation), None, None, None, None)
-                #agent.learn()
+                agent.setExperience(agent.toStateRepresentation(nextObservation), None, None, None, None)
+                agent.learn()
 
         print(agent._Q.values())
 
