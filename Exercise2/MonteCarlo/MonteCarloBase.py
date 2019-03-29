@@ -5,7 +5,7 @@ import argparse
 from time import time
 
 import numpy as np
-from tensorboard_logger import configure, log_value
+#from tensorboard_logger import configure, log_value
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
 from DiscreteHFO.Agent import Agent
@@ -141,7 +141,7 @@ class MonteCarloAgent(Agent):
 
 if __name__ == '__main__':
 
-        configure("tb/MC" + str(time()))
+        #configure("tb/MC" + str(time()))
 
         parser = argparse.ArgumentParser()
         parser.add_argument('--id', type=int, default=0)
@@ -191,11 +191,11 @@ if __name__ == '__main__':
 
                                 rewards_buffer.append(cumulative_rewards)
                                 episode_length.append(t)
-                                log_value("episode/rewards", cumulative_rewards, episode)
-                                log_value("episode/length", t, episode)
-                                for h in history:
-                                    log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
-                                log_value("training/epsilon", epsilon, episode)
+                                #log_value("episode/rewards", cumulative_rewards, episode)
+                                #log_value("episode/length", t, episode)
+                                #for h in history:
+                                    #log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+                                #log_value("training/epsilon", epsilon, episode)
                                 break
 
                 agent.learn()

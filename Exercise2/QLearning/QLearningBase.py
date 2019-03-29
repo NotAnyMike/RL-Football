@@ -4,8 +4,8 @@ import itertools
 import argparse
 from time import time
 
-from pdb import set_trace
-from tensorboard_logger import configure, log_value
+#from pdb import set_trace
+#from tensorboard_logger import configure, log_value
 import numpy as np
 
 from DiscreteHFO.HFOAttackingPlayer import HFOAttackingPlayer
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         episode_length = []
         history = [10,500]
         goals = [0]*max(history)
-        configure("tb/qlearning" + str(time()), flush_secs=5)
+        #configure("tb/qlearning" + str(time()), flush_secs=5)
 
         # Run training using Q-Learning
         numTakenActions = 0 
@@ -171,12 +171,12 @@ if __name__ == '__main__':
 
                                 rewards_buffer.append(cumulative_rewards)
                                 episode_length.append(t)
-                                log_value("episode/rewards", cumulative_rewards, episode)
-                                log_value("episode/length", t, episode)
-                                for h in history:
-                                    log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
-                                log_value("training/lr", learningRate, episode)
-                                log_value("training/epsilon", epsilon, episode)
+                                #log_value("episode/rewards", cumulative_rewards, episode)
+                                #log_value("episode/length", t, episode)
+                                #for h in history:
+                                    #log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+                                #log_value("training/lr", learningRate, episode)
+                                #log_value("training/epsilon", epsilon, episode)
                                 break
         
         print(agent._Q.values())
