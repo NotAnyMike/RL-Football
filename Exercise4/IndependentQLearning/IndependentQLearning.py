@@ -3,16 +3,15 @@
 
 import random
 import argparse
-from tensorboard_logger import configure, log_value
+#from tensorboard_logger import configure, log_value
 from DiscreteMARLUtils.Environment import DiscreteMARLEnvironment
 from DiscreteMARLUtils.Agent import Agent
 from copy import deepcopy
 from time import time
 import numpy as np
-from pdb import set_trace
 from hfo import GOAL
 import argparse
-from datetime import datetime
+#from datetime import datetime
                 
 class IndependentQLearningAgent(Agent):
         def __init__(self, learningRate, discountFactor, epsilon, initVals=0.0):
@@ -114,12 +113,12 @@ if __name__ == '__main__':
         args=parser.parse_args()
 
         ########### with debugging purposes only ############
-        debug = True
-        if debug:
-                rewards_buffer = []
-                history = [10,500]
-                goals = [0]*max(history)
-                configure("tb/IQL" + str(datetime.now()))
+        #debug = True
+        #if debug:
+                #rewards_buffer = []
+                #history = [10,500]
+                #goals = [0]*max(history)
+                #configure("tb/IQL" + str(datetime.now()))
         #####################################################
 
         MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, numAgents = args.numAgents,
@@ -163,16 +162,16 @@ if __name__ == '__main__':
                         observation = nextObservation
                         
                         ############# with debugging purposes ############
-                        if done[0] and debug:
-                                if status[0] == "GOAL":
-                                    goals.append(1)
-                                else:
-                                    goals.append(0)
+                        #if done[0] and debug:
+                                #if status[0] == "GOAL":
+                                    #goals.append(1)
+                                #else:
+                                    #goals.append(0)
 
-                                #rewards_buffer.append(cumulative_rewards)
-                                #log_value("episode/rewards", cumulative_rewards, episode)
-                                for h in history:
-                                    log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
-                                log_value("training/lr", learningRate, episode)
-                                log_value("training/epsilon", epsilon, episode)
+                                ##rewards_buffer.append(cumulative_rewards)
+                                ##log_value("episode/rewards", cumulative_rewards, episode)
+                                #for h in history:
+                                    #log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+                                #log_value("training/lr", learningRate, episode)
+                                #log_value("training/epsilon", epsilon, episode)
                         ##################################################

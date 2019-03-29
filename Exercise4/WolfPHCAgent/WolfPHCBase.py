@@ -6,8 +6,8 @@ import argparse
 from DiscreteMARLUtils.Environment import DiscreteMARLEnvironment
 from DiscreteMARLUtils.Agent import Agent
 from copy import deepcopy
-from datetime import datetime
-from tensorboard_logger import configure, log_value
+#from datetime import datetime
+#from tensorboard_logger import configure, log_value
 import numpy as np
                 
 class WolfPHCAgent(Agent):
@@ -206,12 +206,12 @@ if __name__ == '__main__':
         args=parser.parse_args()
 
         ########### with debugging purposes only ############
-        debug = True
-        if debug:
-                rewards_buffer = []
-                history = [10,500]
-                goals = [0]*max(history)
-                configure("tb/WOLF" + str(datetime.now()))
+        #debug = False
+        #if debug:
+                #rewards_buffer = []
+                #history = [10,500]
+                #goals = [0]*max(history)
+                #configure("tb/WOLF" + str(datetime.now()))
         #####################################################
 
         numOpponents = args.numOpponents
@@ -260,20 +260,20 @@ if __name__ == '__main__':
                         observation = nextObservation
 
                         ############# with debugging purposes ############
-                        if args.visualize: MARLEnv.visualizeState(reward)
+                        #if args.visualize: MARLEnv.visualizeState(reward)
 
-                        if done[0] and debug:
-                                if status[0] == "GOAL":
-                                        goals.append(1)
-                                else:
-                                        goals.append(0)
+                        #if done[0] and debug:
+                                #if status[0] == "GOAL":
+                                        #goals.append(1)
+                                #else:
+                                        #goals.append(0)
 
-                                #rewards_buffer.append(cumulative_rewards)
-                                #log_value("episode/rewards", cumulative_rewards, episode)
-                                for h in history:
-                                        log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
-                                log_value("training/lr", learningRate, episode)
-                                log_value("training/winDelta", winDelta, episode)
-                                log_value("training/loseDelta", loseDelta, episode)
-                                log_value("training/epsilon", agents[0]._epsilon, episode)
+                                ##rewards_buffer.append(cumulative_rewards)
+                                ##log_value("episode/rewards", cumulative_rewards, episode)
+                                #for h in history:
+                                        #log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+                                #log_value("training/lr", learningRate, episode)
+                                #log_value("training/winDelta", winDelta, episode)
+                                #log_value("training/loseDelta", loseDelta, episode)
+                                #log_value("training/epsilon", agents[0]._epsilon, episode)
                         ##################################################

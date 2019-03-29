@@ -6,10 +6,9 @@ import argparse
 from DiscreteMARLUtils.Environment import DiscreteMARLEnvironment
 from DiscreteMARLUtils.Agent import Agent
 from copy import deepcopy
-from tensorboard_logger import configure, log_value
+#from tensorboard_logger import configure, log_value
 import numpy as np
-from pdb import set_trace
-from datetime import datetime
+#from datetime import datetime
 import itertools
 import argparse
 		
@@ -161,12 +160,12 @@ if __name__ == '__main__':
 	args=parser.parse_args()
 
 	########### with debugging purposes only ############
-	debug = True
-	if debug:
-		rewards_buffer = []
-		history = [10,500]
-		goals = [0]*max(history)
-		configure("tb/JAL" + str(datetime.now()))
+	#debug = True
+	#if debug:
+		#rewards_buffer = []
+		#history = [10,500]
+		#goals = [0]*max(history)
+		#configure("tb/JAL" + str(datetime.now()))
 	#####################################################
 
 	MARLEnv = DiscreteMARLEnvironment(numOpponents = args.numOpponents, 
@@ -210,19 +209,19 @@ if __name__ == '__main__':
 				
 			observation = nextObservation
 
-			if args.visualize: MARLEnv.visualizeState(reward)
-
 			############# with debugging purposes ############
-			if done[0] and debug:
-				if status[0] == "GOAL":
-					goals.append(1)
-				else:
-					goals.append(0)
+			#if args.visualize: MARLEnv.visualizeState(reward)
 
-				#rewards_buffer.append(cumulative_rewards)
-				#log_value("episode/rewards", cumulative_rewards, episode)
-				for h in history:
-					log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
-				log_value("training/lr", learningRate, episode)
-				log_value("training/epsilon", epsilon, episode)
-			##################################################
+			#if done[0] and debug:
+				#if status[0] == "GOAL":
+					#goals.append(1)
+				#else:
+					#goals.append(0)
+
+				##rewards_buffer.append(cumulative_rewards)
+				##log_value("episode/rewards", cumulative_rewards, episode)
+				#for h in history:
+					#log_value("training/goals-"+str(h), np.sum(goals[-h:]), episode)
+				#log_value("training/lr", learningRate, episode)
+				#log_value("training/epsilon", epsilon, episode)
+			###################################################
